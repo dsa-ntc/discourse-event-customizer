@@ -2,27 +2,45 @@ en:
   theme_metadata:
     settings:
       fields:
-        description: Manage how custom fields are transformed into dropdowns, mapped to tags, or injected into posts.
+        description: |
+          Manage how custom fields are transformed into dropdowns or mapped to tags.
+          <br><br>
+          <b>IMPORTANT:</b> Every field defined below <u>must</u> also be added to the 
+          <a href="/admin/site_settings/category/all?filter=discourse_post_event_allowed_custom_fields">Allowed Custom Fields</a> 
+          site setting for the Calendar plugin to work.
         schema:
           properties:
             field_label_match:
-              label: Custom field label
+              label: |
+                Custom
+                field label
               description: Exact label of the custom field.
             target_categories:
-              label: Apply to categories
+              label: |
+                Apply to
+                categories
               description: Categories where this rule applies. Leave empty to apply globally.
             is_dropdown:
-              label: Convert to dropdown
+              label: |
+                Convert to
+                dropdown
             dropdown_options:
-              label: Dropdown options
-              description: Separate options with pipes (e.g., Yes|No|Maybe).
+              label: |
+                Dropdown
+                options
+              description: |
+                Separate options with pipes
+                (e.g., Yes|No|Maybe)
             auto_include_in_post:
-              label: Include the field in the event's text
+              label: |
+                Include the
+                field in the 
+                event's text
             is_required:
               label: Make the field required
             tag_mappings:
               label: Tag mappings (Value|Tag)
               description: |
                 If tags should be added and mapped based on the dropdown fields, manually enter mappings as Value|Tag.
-                Tags must currently exist and be typed exactly as they appear.
                 Separate multiple mappings with commas.
+                <b>Note:</b> Tags must currently exist and be typed exactly as they appear.
