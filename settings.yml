@@ -1,0 +1,37 @@
+event_custom_field_rules:
+  type: objects
+  default: []
+  schema:
+    name: event_rule
+    identifier: field_label_match
+    properties:
+      category_ids:
+        type: list
+        list_type: category
+        description: "Categories where this rule applies. Empty = All."
+      field_label_match:
+        type: string
+        required: true
+        validations:
+          max: 50
+        placeholder: "Label for the custom field"
+      is_dropdown:
+        type: boolean
+        default: true
+      dropdown_options:
+        type: list
+        list_type: simple
+        default: 
+          - "Select..."
+          - "Yes"
+          - "No"
+      auto_include_in_post:
+        type: boolean
+        default: false
+      is_required:
+        type: boolean
+        default: false
+      tag_mappings:
+        type: list
+        list_type: simple
+        description: "If tags should be added and mapped based on the dropdown fields, manually enter mappings as Value|Tag - tags must currently exist and be typed exactly as they appear."
