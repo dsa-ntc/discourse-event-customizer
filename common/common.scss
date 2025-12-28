@@ -4,63 +4,42 @@
   color: var(--danger);
 }
 
-/* cleanup for the event builder modal */
-/* targets the top-level container to ensure we hide redundant rows */
-.post-event-builder-modal .event-field-to-hide {
-  display: none !important;
-}
+/* cleanup and layout for the event builder modal */
+.post-event-builder-modal {
+  .event-field-to-hide {
+    display: none !important;
+  }
 
-/* force the label to stack above the dropdown and move the field to top */
-.post-event-builder-modal .event-field.transformed-custom-field {
-  margin-bottom: 1.5em !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-}
+  .event-field.transformed-custom-field {
+    margin-bottom: 1.5em !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
 
-/* ensure the label is bold and spans the full width */
-.post-event-builder-modal .event-field-label {
-  margin-bottom: 0.5em !important;
-  display: block !important;
-  width: 100% !important;
-}
+    .event-field-label {
+      margin-bottom: 0.5em !important;
+      display: block !important;
+      width: 100% !important;
 
-.post-event-builder-modal .event-field-label .label {
-  font-weight: bold !important;
-  display: inline-block !important;
-  color: var(--primary) !important;
-}
+      .label {
+        font-weight: bold !important;
+        display: inline-block !important;
+        color: var(--primary) !important;
+      }
+    }
 
-/* style the custom dropdown to match native discourse menus */
-.post-event-builder-modal select.custom-event-dropdown {
-  width: 100% !important;
-  height: 35px !important;
-  padding: 0 0.5em !important;
-  border: 1px solid var(--primary-low) !important;
-  border-radius: 4px !important;
-  background-color: var(--secondary) !important;
-  color: var(--primary) !important;
-  font-size: var(--font-0) !important;
-}
-
-/* hide the original text input */
-.post-event-builder-modal .event-field.transformed-custom-field input[type="text"] {
-  display: none !important;
-}
-
-/* metadata styling for event box post injection */
-.event-metadata {
-  margin-top: -1px;
-  padding: 10px 15px;
-  background-color: var(--primary-very-low);
-  border: 1px solid var(--primary-low);
-  border-radius: 0 0 4px 4px;
-  font-size: var(--font-down-1);
-  display: inline-block;
-  min-width: 300px;
-
-  strong {
-    color: var(--primary-high);
-    margin-right: 5px;
+    select.custom-event-dropdown {
+      width: 100% !important;
+      height: 35px !important;
+      padding: 0 0.5em !important;
+      border: 1px solid var(--primary-low) !important;
+      border-radius: 4px !important;
+      background-color: var(--secondary) !important;
+      color: var(--primary) !important;
+    }
+    
+    input[type="text"] {
+      display: none !important;
+    }
   }
 }
