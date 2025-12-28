@@ -4,14 +4,13 @@ export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
       
-      // fix for referenceerror: pull settings from the container service
-      const themeSettingsService = api.container.lookup("service:theme-settings");
-      const rules = themeSettingsService?.get("fields") || [];
+      // fetch rules from the service
+      const rules = api.container.lookup("service:theme-settings").get("fields") || [];
       
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // helper to parse pipe-separated strings
+      // helper to convert strings/arrays into usable lists
       const listToArr = (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val;
@@ -20,13 +19,13 @@ export default apiInitializer("1.8.0", (api) => {
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // target the .event-field structure confirmed by your console
+        // target the flat div structure
         const eventFields = modal?.querySelectorAll(".event-field");
         
         if (!eventFields?.length) return;
 
         eventFields.forEach((field) => {
-          // precise selector matching your inspector data
+          // find label and control containers
           const labelSpan = field.querySelector(".event-field-label .label") || field.querySelector(".label");
           const controlContainer = field.querySelector(".event-field-control");
           const input = field.querySelector("input[type='text']");
@@ -42,7 +41,7 @@ export default apiInitializer("1.8.0", (api) => {
             return;
           }
 
-          // match modal field to your theme rules
+          // match modal field to rules defined in theme settings
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
@@ -71,7 +70,7 @@ export default apiInitializer("1.8.0", (api) => {
 
               select.addEventListener("change", (e) => {
                 input.value = e.target.value;
-                // notify discourse that the input has been updated
+                // notify discourse that the input has changed
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
               });
@@ -80,20 +79,20 @@ export default apiInitializer("1.8.0", (api) => {
               controlContainer.appendChild(select);
             }
             
-            // move the field to the top of the modal body
+            // move the custom field to the top of the modal body
             const modalBody = modal.querySelector(".modal-body form");
             const firstField = modalBody?.querySelector(".event-field");
             if (modalBody && firstField && field !== firstField) {
               modalBody.insertBefore(field, firstField);
             }
           } else if (input && !rule) {
-            // hide any custom field not defined in the theme rules
+            // hide any custom field that does not have a rule in settings
             field.style.display = "none";
           }
         });
       };
 
-      // wait for the dynamic plugin modal to render
+      // wait for dynamic modal content to render
       const observer = new MutationObserver(() => {
         const modal = document.querySelector(".post-event-builder-modal");
         if (modal?.querySelectorAll(".event-field").length > 0) {

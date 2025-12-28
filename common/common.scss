@@ -1,49 +1,62 @@
 /* visual indicator for required fields */
+/* targets the asterisk for the new flat div structure */
 .event-field.transformed-custom-field[data-required="true"] .label::after {
   content: " *";
   color: var(--danger);
 }
 
 /* cleanup and layout for the event builder modal */
+/* targets the top-level modal container to ensure rules apply correctly */
 .post-event-builder-modal {
-  /* hide redundant headers identified by script */
+  
+  /* hide specific redundant rows identified by the script */
+  /* use !important to override the plugin's inline display: flex */
   .event-field-to-hide {
     display: none !important;
   }
 
-  /* layout for fields moved to top */
+  /* layout for fields moved to the top */
+  /* force flex-direction to stack the label above the dropdown */
   .event-field.transformed-custom-field {
-    margin-bottom: 1.5em;
+    margin-bottom: 1.5em !important;
     display: flex !important;
     flex-direction: column !important;
+    align-items: flex-start !important;
+  }
 
-    .event-field-label {
-      margin-bottom: 0.5em;
-      .label {
-        font-weight: bold !important;
-        display: block !important;
-      }
-    }
+  /* style the label wrapper div */
+  .event-field-label {
+    margin-bottom: 0.5em !important;
+    display: block !important;
+    width: 100% !important;
+  }
 
-    /* match native discourse dropdown styling */
-    select.custom-event-dropdown {
-      width: 100%;
-      height: 35px;
-      padding: 0 0.5em;
-      border: 1px solid var(--primary-low);
-      border-radius: 4px;
-      background-color: var(--secondary);
-      color: var(--primary);
-    }
-    
-    /* force hide the native text input */
-    input[type="text"] {
-      display: none !important;
-    }
+  /* target the span inside the label wrapper */
+  .event-field-label .label {
+    font-weight: bold !important;
+    display: inline-block !important;
+    color: var(--primary) !important;
+  }
+
+  /* match native discourse dropdown styling */
+  select.custom-event-dropdown {
+    width: 100% !important;
+    height: 35px !important;
+    padding: 0 0.5em !important;
+    border: 1px solid var(--primary-low) !important;
+    border-radius: 4px !important;
+    background-color: var(--secondary) !important;
+    color: var(--primary) !important;
+    font-size: var(--font-0) !important;
+  }
+  
+  /* force hide the native text input once dropdown is ready */
+  .event-field.transformed-custom-field input[type="text"] {
+    display: none !important;
   }
 }
 
-/* metadata styling for post injection */
+/* metadata styling for event box post injection */
 .event-metadata {
   margin-top: -1px;
   padding: 10px 15px;
