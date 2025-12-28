@@ -4,14 +4,14 @@
   color: var(--danger);
 }
 
-/* modern plugin structure cleanup and layout */
+/* cleanup for the event builder modal */
 .post-event-builder-modal {
-  /* hide the redundant header rows identified by the script */
+  /* hide the redundant headers identified by script */
   .event-field-to-hide {
     display: none !important;
   }
 
-  /* layout for fields moved to the top */
+  /* layout for fields moved to top */
   .event-field.transformed-custom-field {
     margin-bottom: 1.5em;
     display: flex !important;
@@ -36,14 +36,14 @@
       color: var(--primary);
     }
     
-    /* hide the native text input once dropdown is ready */
+    /* force hide the native input */
     input[type="text"] {
       display: none !important;
     }
   }
 }
 
-/* metadata styling for post display */
+/* metadata styling for event box post injection */
 .event-metadata {
   margin-top: -1px;
   padding: 10px 15px;
