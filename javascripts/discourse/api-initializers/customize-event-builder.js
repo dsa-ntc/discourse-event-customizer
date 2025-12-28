@@ -4,11 +4,12 @@ export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name !== "post-event-builder") return;
 
-    // fix: use the global settings object directly
-    const targetLabels = settings.fields || [];
+    // use the global settings object directly
+    const checkboxTargets = settings.fields || [];
 
-    const injectCheckboxes = () => {
+    const injectCheckbox = () => {
       const modal = document.querySelector(".post-event-builder-modal");
+      // target labels confirmed by the plugin's template
       const labels = modal?.querySelectorAll(".custom-field-label");
 
       labels?.forEach((label) => {
@@ -16,8 +17,10 @@ export default apiInitializer("1.24.0", (api) => {
 
         const text = label.textContent.trim().toLowerCase();
         
-        // match the label text against the global settings list
-        const shouldTransform = targetLabels.some(t => text.includes(t.toLowerCase().trim()));
+        // match the label text against your list in settings
+        const shouldTransform = checkboxTargets.some(t => 
+          text.includes(t.toLowerCase().trim())
+        );
 
         if (shouldTransform) {
           const nativeInput = label.nextElementSibling;
@@ -25,39 +28,40 @@ export default apiInitializer("1.24.0", (api) => {
 
           label.dataset.processed = "true";
 
-          const wrapper = document.createElement("div");
-          wrapper.classList.add("custom-checkbox-row");
+          const row = document.createElement("div");
+          row.classList.add("custom-checkbox-row");
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           
-          // sync state: checked if current string value is "yes"
+          // sync initial state: check if the string value is "yes"
           checkbox.checked = nativeInput.value === "yes";
 
           checkbox.addEventListener("change", (e) => {
-            // map state to strings for plugin compatibility
+            // map checkbox state to boolean strings for plugin compatibility
             nativeInput.value = e.target.checked ? "yes" : "no";
-            // trigger plugin save
+            // trigger plugin's native save listener
             nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
           });
 
+          // hide the text input and show the checkbox
           nativeInput.style.setProperty("display", "none", "important");
-          
-          label.after(wrapper);
-          wrapper.appendChild(checkbox);
-          wrapper.appendChild(label); 
+          label.after(row);
+          row.appendChild(checkbox);
+          row.appendChild(label); 
         }
       });
     };
 
+    // monitor the modal for custom field appearance
     const observer = new MutationObserver(() => {
       if (document.querySelector(".custom-field-label")) {
-        injectCheckboxes();
+        injectCheckbox();
         observer.disconnect();
       }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(injectCheckboxes, 500);
+    setTimeout(injectCheckbox, 600);
   });
 });
