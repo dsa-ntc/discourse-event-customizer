@@ -4,9 +4,9 @@ import I18n from "I18n";
 
 export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
-    if (data.name === "post-event-builder") {
-      // retrieve rules from settings or default to empty array
-      const rules = settings.event_custom_field_rules || [];
+    if (data?.name === "post-event-builder") {
+      // safely retrieve rules from settings
+      const rules = settings?.event_custom_field_rules || [];
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
@@ -17,8 +17,10 @@ export default apiInitializer("1.8.0", (api) => {
       setTimeout(() => {
         const fieldContainers = document.querySelectorAll(".custom-fields-section .field-wrapper");
         const createBtn = document.querySelector(".modal-footer .btn-primary");
-        const cancelBtn = document.querySelector(".modal-footer .btn-danger, .modal-footer .cancel");
+        const cancelBtn = document.querySelector(".modal-footer .cancel, .modal-footer .btn-danger");
         const closeX = document.querySelector(".modal-header .close");
+
+        if (!fieldContainers.length) return;
 
         // validation logic to ensure required fields are filled before creation
         const checkValidation = () => {
@@ -64,6 +66,7 @@ export default apiInitializer("1.8.0", (api) => {
           // match the current field to the rules defined in settings
           const rule = rules.find(r => {
             const catString = r.category_ids || "";
+            // safely parse the pipe-delimited category string
             const categoryList = catString.split("|").filter(Boolean).map(id => parseInt(id));
             return (categoryList.length === 0 || categoryList.includes(currentCategoryId)) && labelText.includes(r.field_label_match);
           });
@@ -134,7 +137,7 @@ export default apiInitializer("1.8.0", (api) => {
                 if (rule.auto_include_in_post) {
                   const content = `**${rule.field_label_match}:** ${val}`;
                   const injection = `\n\n<div class="event-metadata">\n${content}\n</div>`;
-                  const currentReply = composer.get("model.reply");
+                  const currentReply = composer.get("model.reply") || "";
                   if (!currentReply.includes(content)) {
                     composer.set("model.reply", currentReply + injection);
                   }
