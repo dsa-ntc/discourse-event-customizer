@@ -37,7 +37,7 @@ export default apiInitializer("1.8.0", (api) => {
             if (createBtn) createBtn.disabled = !allValid;
           };
 
-          // confirmation dialog logic using global bootbox
+          // confirmation dialog logic using global window.bootbox
           const handleCancel = (e) => {
             let hasData = false;
             fieldContainers.forEach(container => {
@@ -49,7 +49,7 @@ export default apiInitializer("1.8.0", (api) => {
               e.preventDefault();
               e.stopPropagation();
               window.bootbox.confirm(
-                "You have unsaved selections in your custom fields. Are you sure you want to close without saving?",
+                "You have unsaved selections. Are you sure you want to close without saving?",
                 (result) => { if (result) api.container.lookup("service:modal").hide(); }
               );
             }
@@ -64,9 +64,8 @@ export default apiInitializer("1.8.0", (api) => {
 
             const labelText = label.textContent.trim() || "";
 
-            // match the current field to the rules defined in settings
+            // match the current field to rules defined in settings using target_categories
             const rule = rules.find(r => {
-              // using target_categories to match the new settings schema
               const categoryList = listToArr(r.target_categories).map(id => parseInt(id));
               const categoryMatch = categoryList.length === 0 || categoryList.includes(currentCategoryId);
               return categoryMatch && r.field_label_match && labelText.includes(r.field_label_match);
@@ -108,7 +107,7 @@ export default apiInitializer("1.8.0", (api) => {
                   const val = input.value;
                   if (!val || val === "Select...") return;
 
-                  // apply tags automatically based on user selection
+                  // apply tags automatically based on the user selection
                   if (rule.tag_mappings) {
                     const validTags = Discourse.Site.currentProp("valid_tags") || [];
                     const mappings = listToArr(rule.tag_mappings);
@@ -119,7 +118,7 @@ export default apiInitializer("1.8.0", (api) => {
                         const [optVal, tagName] = parts;
                         const cleanTag = tagName.trim();
                         if (optVal.trim() === val) {
-                          // notify if the mapped tag is missing from the site
+                          // notify if mapped tag is missing using window.bootbox
                           if (!validTags.includes(cleanTag) && window.bootbox) {
                             window.bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist on this site.`);
                           }

@@ -5,16 +5,14 @@ event_custom_field_rules:
     name: event_rule
     identifier: field_label_match
     properties:
-      category_ids:
-        type: list
-        list_type: category
-        description: "Categories where this rule applies. Leave empty to apply globally."
       field_label_match:
         type: string
         required: true
         validations:
           max: 50
-        description: "Label for the custom field"
+      target_categories:
+        type: list
+        list_type: category
       is_dropdown:
         type: boolean
         default: true
@@ -34,4 +32,3 @@ event_custom_field_rules:
       tag_mappings:
         type: list
         list_type: simple
-        description: "If tags should be added and mapped based on the dropdown fields, manually enter mappings as Value|Tag - tags must currently exist and be typed exactly as they appear."

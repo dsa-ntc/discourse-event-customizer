@@ -4,7 +4,7 @@
   "authors": "jen",
   "about_url": "https://github.com/dsa-ntc/discourse-event-customizer",
   "license_url": "https://github.com/dsa-ntc/discourse-event-customizer/blob/main/LICENSE",
-  "theme_version": "1.3.6",
+  "theme_version": "1.3.7",
   "minimum_discourse_version": "3.6.0.beta1",
   "maximum_discourse_version": null,
   "assets": {
