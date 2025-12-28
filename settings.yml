@@ -23,8 +23,3 @@ fields:
       auto_include_in_post:
         type: boolean
         default: false
-      is_required:
-        type: boolean
-        default: false
-      tag_mappings:
-        type: string

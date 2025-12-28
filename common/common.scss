@@ -1,15 +1,16 @@
 .post-event-builder-modal {
-  /* hide the description text and redundant plugin labels */
+  /* hide description and redundant headers from the plugin template */
   .event-field-description,
   .event-field-label .label {
     display: none !important;
   }
 
-  /* stack labels and dropdowns inside the custom field area */
+  /* stack labels and dropdowns vertically */
   .custom-field-label {
     display: block !important;
     font-weight: bold !important;
     margin: 10px 0 5px 0 !important;
+    color: var(--primary);
   }
 
   select.custom-event-dropdown {
@@ -20,9 +21,10 @@
     color: var(--primary);
     border: 1px solid var(--primary-low);
     border-radius: 4px;
+    padding: 0 5px;
   }
 
-  /* ensure native inputs stay hidden */
+  /* ensure native text inputs stay hidden */
   .custom-field-input {
     display: none !important;
   }

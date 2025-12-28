@@ -36,11 +36,3 @@ en:
                 Include the
                 field in the 
                 event's text
-            is_required:
-              label: Make the field required
-            tag_mappings:
-              label: Tag mappings (Value|Tag)
-              description: |
-                If tags should be added and mapped based on the dropdown fields, manually enter mappings as Value|Tag.
-                Separate multiple mappings with commas.
-                <b>Note:</b> Tags must currently exist and be typed exactly as they appear.

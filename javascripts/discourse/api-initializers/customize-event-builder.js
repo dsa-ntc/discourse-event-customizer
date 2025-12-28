@@ -2,25 +2,17 @@ import { apiInitializer } from "discourse/lib/api";
 
 export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
+    // identify the calendar modal
     if (data?.name !== "post-event-builder") return;
 
-    // fix: direct property access to bypass the "get is not defined" error
-    const activeRules = (() => {
-      try {
-        const themeSettings = api.container.lookup("service:theme-settings");
-        // direct access to the fields property instead of using .get()
-        return themeSettings?.fields || themeSettings?._fields || [];
-      } catch (e) {
-        return [];
-      }
-    })();
-
-    const composer = api.container.lookup("controller:composer");
-    const categoryId = composer?.model?.category?.id;
+    // reach directly into the container to find theme settings
+    // using direct property access to bypass the .get() TypeError
+    const themeSettings = api.container.lookup("service:theme-settings");
+    const rules = themeSettings?.fields || themeSettings?._fields || [];
 
     const injectDropdown = () => {
       const modal = document.querySelector(".post-event-builder-modal");
-      // target the specific label spans confirmed by the plugin source
+      // target specific labels identified in the plugin hbs template
       const labels = modal?.querySelectorAll(".custom-field-label");
 
       labels?.forEach((label) => {
@@ -32,19 +24,15 @@ export default apiInitializer("1.24.0", (api) => {
 
         if (!nativeInput || nativeInput.tagName !== "INPUT") return;
 
-        // find a rule where the label match (e.g., "include cal") exists
-        const rule = activeRules.find(r => {
-          const catMatch = !r.target_categories?.length || r.target_categories.includes(categoryId);
-          const labelMatch = r.field_label_match && text.includes(r.field_label_match.toLowerCase());
-          return catMatch && labelMatch;
-        });
+        // find a rule matching the current label text (e.g., "include cal")
+        const rule = rules.find(r => r.field_label_match && text.includes(r.field_label_match.toLowerCase()));
 
         if (rule?.is_dropdown) {
           label.dataset.processed = "true";
           const dropdown = document.createElement("select");
           dropdown.classList.add("custom-event-dropdown");
 
-          // parse rules: label|value format
+          // parse options: label|value format
           const opts = (rule.dropdown_options || "").split(/[|,]+/).map(o => {
             const [n, v] = o.includes("|") ? o.split("|") : [o, o];
             return { name: n.trim(), value: v.trim() };
@@ -60,7 +48,7 @@ export default apiInitializer("1.24.0", (api) => {
 
           dropdown.addEventListener("change", (e) => {
             nativeInput.value = e.target.value;
-            // critical: dispatch input so the plugin hbs listener triggers
+            // dispatch event so the plugin's hbs listener saves the choice
             nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
           });
 
@@ -70,6 +58,7 @@ export default apiInitializer("1.24.0", (api) => {
       });
     };
 
+    // observe the modal for the appearance of custom field labels
     const observer = new MutationObserver(() => {
       if (document.querySelector(".custom-field-label")) {
         injectDropdown();
@@ -78,6 +67,7 @@ export default apiInitializer("1.24.0", (api) => {
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(injectDropdown, 600);
+    // fallback to ensure injection triggers
+    setTimeout(injectDropdown, 500);
   });
 });
