@@ -4,33 +4,35 @@ export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name !== "post-event-builder") return;
 
-    // logic change: use a direct closure for rules to bypass the referenceerror
+    // fix: direct property access to bypass the "get is not defined" error
     const activeRules = (() => {
       try {
         const themeSettings = api.container.lookup("service:theme-settings");
-        return themeSettings?.get("fields") || [];
+        // direct access to the fields property instead of using .get()
+        return themeSettings?.fields || themeSettings?._fields || [];
       } catch (e) {
         return [];
       }
     })();
 
     const composer = api.container.lookup("controller:composer");
-    const categoryId = composer?.get("model.category.id");
+    const categoryId = composer?.model?.category?.id;
 
     const injectDropdown = () => {
       const modal = document.querySelector(".post-event-builder-modal");
-      // target the specific span from the plugin source you identified
+      // target the specific label spans confirmed by the plugin source
       const labels = modal?.querySelectorAll(".custom-field-label");
 
       labels?.forEach((label) => {
         if (label.dataset.processed === "true") return;
 
         const text = label.textContent.trim().toLowerCase();
-        // the input is the immediate next sibling in the template
+        // the input is the immediate next sibling as defined in the hbs
         const nativeInput = label.nextElementSibling;
 
         if (!nativeInput || nativeInput.tagName !== "INPUT") return;
 
+        // find a rule where the label match (e.g., "include cal") exists
         const rule = activeRules.find(r => {
           const catMatch = !r.target_categories?.length || r.target_categories.includes(categoryId);
           const labelMatch = r.field_label_match && text.includes(r.field_label_match.toLowerCase());
@@ -58,7 +60,7 @@ export default apiInitializer("1.24.0", (api) => {
 
           dropdown.addEventListener("change", (e) => {
             nativeInput.value = e.target.value;
-            // dispatch input event so the plugin's {{on "input"}} listener triggers
+            // critical: dispatch input so the plugin hbs listener triggers
             nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
           });
 
@@ -76,6 +78,6 @@ export default apiInitializer("1.24.0", (api) => {
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(injectDropdown, 500);
+    setTimeout(injectDropdown, 600);
   });
 });
