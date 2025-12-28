@@ -4,10 +4,10 @@ export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name !== "post-event-builder") return;
 
-    // fix: use global settings variable directly
-    const checkboxTargets = settings.fields || [];
+    // fix: direct access to settings avoids the .get() typeerror
+    const targetLabels = settings.fields || [];
 
-    const injectCheckbox = () => {
+    const injectCustomCheckbox = () => {
       const modal = document.querySelector(".post-event-builder-modal");
       if (!modal) return;
 
@@ -16,10 +16,8 @@ export default apiInitializer("1.24.0", (api) => {
       labels.forEach((label) => {
         if (label.dataset.processed === "true") return;
 
-        const labelText = label.textContent.trim().toLowerCase();
-        const isMatch = checkboxTargets.some(target => 
-          labelText.includes(target.toLowerCase().trim())
-        );
+        const text = label.textContent.trim().toLowerCase();
+        const isMatch = targetLabels.some(t => text.includes(t.toLowerCase().trim()));
 
         if (isMatch) {
           const nativeInput = label.closest(".event-field")?.querySelector("input.custom-field-input");
@@ -27,41 +25,40 @@ export default apiInitializer("1.24.0", (api) => {
           
           label.dataset.processed = "true";
 
-          // 1. Create the container matching the plugin's class
-          const checkboxContainer = document.createElement("label");
-          checkboxContainer.className = "checkbox-label injected-custom-field";
+          // recreate the native structure with your custom container
+          const container = document.createElement("div");
+          container.className = "checkbox-container injected-field-wrapper";
 
-          // 2. Create the checkbox
+          const checkboxLabel = document.createElement("label");
+          checkboxLabel.className = "checkbox-label";
+
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
-          checkbox.checked = nativeInput.value === "yes"; // Sync string value
+          checkbox.checked = nativeInput.value === "yes"; // discourse stores boolean as string
 
-          // 3. Create the text span matching the plugin's "message" class
           const messageSpan = document.createElement("span");
           messageSpan.className = "message";
           messageSpan.textContent = label.textContent.trim();
 
           checkbox.addEventListener("change", (e) => {
-            // Map state to strings for plugin compatibility
+            // sync binary state to plugin-required "yes"/"no" strings
             nativeInput.value = e.target.checked ? "yes" : "no";
-            // Dispatch 'input' to trigger the plugin's save logic
             nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
           });
 
-          // 4. Assemble and Inject
-          checkboxContainer.appendChild(checkbox);
-          checkboxContainer.appendChild(messageSpan);
+          checkboxLabel.appendChild(checkbox);
+          checkboxLabel.appendChild(messageSpan);
+          container.appendChild(checkboxLabel);
           
-          // Hide the original elements and inject our native-style row
-          nativeInput.style.display = "none";
-          label.style.display = "none";
-          label.parentNode.appendChild(checkboxContainer);
+          // inject and highlight the native input for final verification
+          label.parentNode.appendChild(container);
+          nativeInput.style.border = "2px solid red"; 
+          label.style.color = "orange";
         }
       });
     };
 
-    // Poll to ensure injection occurs as the modal loads
-    const interval = setInterval(injectCheckbox, 500);
+    const interval = setInterval(injectCustomCheckbox, 500);
     setTimeout(() => clearInterval(interval), 10000);
   });
 });

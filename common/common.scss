@@ -1,23 +1,58 @@
 .post-event-builder-modal {
+  .checkbox-container.injected-field-wrapper {
+    margin-top: 15px;
+    padding: 8px;
+    background: rgba(var(--primary-rgb), 0.03);
+    border-radius: 4px;
 
-  /* ensure our injected row matches the native layout */
-  .checkbox-label.injected-custom-field {
-    display: flex !important;
-    align-items: center !important;
-    margin-top: 10px !important;
-    cursor: pointer;
+    .checkbox-label {
+      display: flex !important;
+      align-items: center !important;
+      cursor: pointer;
+      margin: 0;
 
-    input[type="checkbox"] {
-      margin-right: 10px !important;
-      width: 18px !important;
-      height: 18px !important;
-      flex-shrink: 0;
-    }
+      input {
+        /* hide default checkbox */
+        appearance: none;
+        -webkit-appearance: none;
+        margin: 0 12px 0 0;
+        font: inherit;
+        color: var(--tertiary);
+        width: 1.25em;
+        height: 1.25em;
+        border: 0.15em solid currentColor;
+        border-radius: 0.15em;
+        display: grid;
+        place-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
 
-    .message {
-      font-weight: bold !important;
-      color: var(--primary) !important;
-      line-height: var(--line-height-medium);
+        &::before {
+          content: "";
+          width: 0.75em;
+          height: 0.75em;
+          box-shadow: inset 1em 1em currentColor;
+          transform: scale(0);
+          transition: 120ms transform ease-in-out;
+          /* shape the pseudo-element into a checkmark */
+          clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        &:checked::before {
+          transform: scale(1);
+        }
+
+        &:focus {
+          outline: 2px solid var(--tertiary-low);
+          outline-offset: 2px;
+        }
+      }
+
+      .message {
+        font-weight: bold;
+        color: var(--primary);
+        font-size: var(--font-0);
+      }
     }
   }
 }
