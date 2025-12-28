@@ -1,27 +1,29 @@
 .post-event-builder-modal {
-  /* hide description and redundant headers from the plugin template */
+  /* hide description and redundant headers */
   .event-field-description,
   .event-field-label .label {
     display: none !important;
   }
 
-  /* stack labels and dropdowns vertically */
+  /* stack labels and dropdowns vertically as seen in image_9e7a8a.png */
   .custom-field-label {
     display: block !important;
     font-weight: bold !important;
-    margin: 10px 0 5px 0 !important;
-    color: var(--primary);
+    margin: 15px 0 5px 0 !important;
+    color: var(--primary) !important;
   }
 
   select.custom-event-dropdown {
     width: 100% !important;
     display: block !important;
     height: 35px !important;
-    background: var(--secondary);
-    color: var(--primary);
-    border: 1px solid var(--primary-low);
-    border-radius: 4px;
-    padding: 0 5px;
+    background: var(--secondary) !important;
+    color: var(--primary) !important;
+    border: 1px solid var(--primary-low) !important;
+    border-radius: 4px !important;
+    padding: 0 5px !important;
+    font-size: var(--font-0) !important;
+    appearance: auto !important; // ensure the arrow shows up
   }
 
   /* ensure native text inputs stay hidden */
