@@ -50,11 +50,7 @@ export default apiInitializer("1.8.0", (api) => {
               e.stopPropagation();
               window.bootbox.confirm(
                 "You have unsaved selections in your custom fields. Are you sure you want to close without saving?",
-                (result) => {
-                  if (result) {
-                    api.container.lookup("service:modal").hide();
-                  }
-                }
+                (result) => { if (result) api.container.lookup("service:modal").hide(); }
               );
             }
           };
@@ -70,9 +66,10 @@ export default apiInitializer("1.8.0", (api) => {
 
             // match the current field to the rules defined in settings
             const rule = rules.find(r => {
-              const categoryList = listToArr(r.category_ids).map(id => parseInt(id));
+              // using target_categories to match the new settings schema
+              const categoryList = listToArr(r.target_categories).map(id => parseInt(id));
               const categoryMatch = categoryList.length === 0 || categoryList.includes(currentCategoryId);
-              return categoryMatch && labelText.includes(r.field_label_match);
+              return categoryMatch && r.field_label_match && labelText.includes(r.field_label_match);
             });
 
             if (rule) {
