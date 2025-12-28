@@ -21,11 +21,11 @@ export default apiInitializer("1.8.0", (api) => {
 
         if (!fieldContainers.length) return;
 
-        // helper to safely turn settings strings/arrays into usable arrays
+        // helper to safely turn settings strings or arrays into usable arrays
         const listToArr = (val) => {
           if (!val) return [];
           if (Array.isArray(val)) return val;
-          return val.split("|").filter(Boolean);
+          return typeof val === 'string' ? val.split("|").filter(Boolean) : [];
         };
 
         // validation logic to ensure required fields are filled before creation
@@ -110,7 +110,7 @@ export default apiInitializer("1.8.0", (api) => {
                 const val = input.value;
                 if (!val || val === "Select...") return;
 
-                // apply tags automatically based on the user selection
+                // apply tags automatically based on user selection
                 if (rule.tag_mappings) {
                   const validTags = Discourse.Site.currentProp("valid_tags") || [];
                   const mappings = listToArr(rule.tag_mappings);
@@ -135,7 +135,7 @@ export default apiInitializer("1.8.0", (api) => {
                   });
                 }
 
-                // append the styled metadata block to the topic text
+                // append styled metadata block to the topic text
                 if (rule.auto_include_in_post) {
                   const content = `**${rule.field_label_match}:** ${val}`;
                   const injection = `\n\n<div class="event-metadata">\n${content}\n</div>`;
