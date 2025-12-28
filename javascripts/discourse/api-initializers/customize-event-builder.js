@@ -4,14 +4,14 @@ export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
       
-      // retrieve settings from the discourse container to fix referenceerror
+      // pull settings directly from the service to fix referenceerror
       const themeSettings = api.container.lookup("service:theme-settings");
       const rules = themeSettings?.get("fields") || [];
       
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // helper to parse input into arrays
+      // helper for parsing pipe-separated strings
       const listToArr = (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val;
@@ -20,13 +20,13 @@ export default apiInitializer("1.8.0", (api) => {
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // target the flat event-field divs confirmed by your inspector
+        // target the flat div structure confirmed by your console check
         const eventFields = modal?.querySelectorAll(".event-field");
         
         if (!eventFields?.length) return;
 
         eventFields.forEach((field) => {
-          // target labels and containers using exact inspector hierarchy
+          // precise targeting based on your inspector data
           const labelSpan = field.querySelector(".event-field-label .label") || field.querySelector(".label");
           const controlContainer = field.querySelector(".event-field-control");
           const input = field.querySelector("input[type='text']");
@@ -35,14 +35,14 @@ export default apiInitializer("1.8.0", (api) => {
 
           const labelText = labelSpan.textContent.trim().toLowerCase();
 
-          // hide redundant header and instructions rows
+          // hide the redundant custom field headers
           if (labelText.includes("custom fields") || labelText.includes("allowed custom fields")) {
             field.classList.add("event-field-to-hide");
             field.style.setProperty("display", "none", "important");
             return;
           }
 
-          // match field to theme rules
+          // match modal label to theme rules
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
@@ -71,7 +71,7 @@ export default apiInitializer("1.8.0", (api) => {
 
               select.addEventListener("change", (e) => {
                 input.value = e.target.value;
-                // notify discourse that the input has been updated
+                // notify discourse that the input has changed
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
               });
@@ -80,20 +80,20 @@ export default apiInitializer("1.8.0", (api) => {
               controlContainer.appendChild(select);
             }
             
-            // move the field to the top of the form body
-            const modalBody = modal.querySelector(".modal-body #ember80 form") || modal.querySelector("form");
+            // move the custom field to the top of the modal body
+            const modalBody = modal.querySelector(".modal-body form");
             const firstField = modalBody?.querySelector(".event-field");
             if (modalBody && firstField && field !== firstField) {
               modalBody.insertBefore(field, firstField);
             }
           } else if (input && !rule) {
-            // hide any field that is not defined in the rules
+            // hide any custom field that does not have a rule
             field.style.display = "none";
           }
         });
       };
 
-      // observer to catch the plugin's dynamic rendering
+      // observer to handle the plugin's dynamic rendering
       const observer = new MutationObserver(() => {
         const modal = document.querySelector(".post-event-builder-modal");
         if (modal?.querySelectorAll(".event-field").length > 0) {
@@ -103,7 +103,7 @@ export default apiInitializer("1.8.0", (api) => {
       });
 
       observer.observe(document.body, { childList: true, subtree: true });
-      setTimeout(transformFields, 800); // fallback for slow loading
+      setTimeout(transformFields, 800);
     }
   });
 });

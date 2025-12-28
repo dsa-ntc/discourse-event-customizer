@@ -1,12 +1,38 @@
+/* hide the custom fields header and the help text */
+.discourse-post-event-builder .custom-fields-section {
+    .section-title, 
+    .instructions {
+        display: none;
+    }
+}
+
+/* enable flexbox on the event builder container */
+.discourse-post-event-builder .modal-body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* set 'chat integration' and 'minimal event' to a lower priority (higher number) */
+/* effectively pushes the Custom Fields section up */
+.discourse-post-event-builder .minimal-event-section,
+.discourse-post-event-builder .chat-integration-section {
+    order: 10;
+}
+
+.discourse-post-event-builder .custom-fields-section {
+    order: 5; /* Lower number = higher position */
+    margin-bottom: 20px;
+}
+
 /* visual indicator for required fields */
 .event-field.transformed-custom-field[data-required="true"] .label::after {
   content: " *";
   color: var(--danger);
 }
 
-/* cleanup for the event builder modal */
+/* cleanup and layout for the event builder modal */
 .post-event-builder-modal {
-  /* hide the redundant headers identified by script */
+  /* hide the redundant header rows identified by script */
   .event-field-to-hide {
     display: none !important;
   }
