@@ -5,11 +5,12 @@ import I18n from "I18n";
 export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data.name === "post-event-builder") {
+      // retrieve rules from settings or default to empty array
       const rules = settings.event_custom_field_rules || [];
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // debugging: view the exact rule data in the browser console
+      // debugging: view rule data and category in browser console
       console.log("[event customizer] loaded rules:", rules);
       console.log("[event customizer] current category id:", currentCategoryId);
 
@@ -62,7 +63,8 @@ export default apiInitializer("1.8.0", (api) => {
 
           // match the current field to the rules defined in settings
           const rule = rules.find(r => {
-            const categoryList = r.category_ids ? r.category_ids.split("|").map(id => parseInt(id)) : [];
+            const catString = r.category_ids || "";
+            const categoryList = catString.split("|").filter(Boolean).map(id => parseInt(id));
             return (categoryList.length === 0 || categoryList.includes(currentCategoryId)) && labelText.includes(r.field_label_match);
           });
 
@@ -74,6 +76,7 @@ export default apiInitializer("1.8.0", (api) => {
             if (rule.is_dropdown && !container.querySelector(".custom-event-dropdown")) {
               const select = document.createElement("select");
               select.classList.add("custom-event-dropdown");
+              
               const options = rule.dropdown_options ? rule.dropdown_options.split("|") : ["Select...", "Yes", "No"];
               
               options.forEach(opt => {
@@ -100,7 +103,7 @@ export default apiInitializer("1.8.0", (api) => {
                 const val = input.value;
                 if (!val || val === "Select...") return;
 
-                // apply tags automatically based on the user's selection
+                // apply tags automatically based on the user selection
                 if (rule.tag_mappings) {
                   const validTags = Discourse.Site.currentProp("valid_tags") || [];
                   const mappings = rule.tag_mappings.split("|");
@@ -114,7 +117,7 @@ export default apiInitializer("1.8.0", (api) => {
                       if (optVal.trim() === val) {
                         // notify if the mapped tag is missing from the site
                         if (!validTags.includes(cleanTag)) {
-                          bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist on this site. your automation may fail.`);
+                          bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist on this site.`);
                         }
 
                         const currentTags = composer.get("model.tags") || [];

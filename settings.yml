@@ -14,7 +14,7 @@ event_custom_field_rules:
         required: true
         validations:
           max: 50
-        placeholder: "Label for the custom field"
+        description: "Label for the custom field"
       is_dropdown:
         type: boolean
         default: true
