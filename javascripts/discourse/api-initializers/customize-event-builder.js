@@ -10,9 +10,8 @@ export default apiInitializer("1.8.0", (api) => {
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // debugging: view rule data and category in browser console
-      console.log("[event customizer] loaded rules:", rules);
-      console.log("[event customizer] current category id:", currentCategoryId);
+      // debugging: view rule data in console
+      console.log("[event customizer] rules:", rules);
 
       setTimeout(() => {
         const fieldContainers = document.querySelectorAll(".custom-fields-section .field-wrapper");
@@ -21,6 +20,13 @@ export default apiInitializer("1.8.0", (api) => {
         const closeX = document.querySelector(".modal-header .close");
 
         if (!fieldContainers.length) return;
+
+        // helper to safely turn settings strings/arrays into usable arrays
+        const listToArr = (val) => {
+          if (!val) return [];
+          if (Array.isArray(val)) return val;
+          return val.split("|").filter(Boolean);
+        };
 
         // validation logic to ensure required fields are filled before creation
         const checkValidation = () => {
@@ -48,9 +54,7 @@ export default apiInitializer("1.8.0", (api) => {
             bootbox.confirm(
               "You have unsaved selections in your custom fields. Are you sure you want to close without saving?",
               (result) => {
-                if (result) {
-                  api.container.lookup("service:modal").hide();
-                }
+                if (result) api.container.lookup("service:modal").hide();
               }
             );
           }
@@ -65,10 +69,9 @@ export default apiInitializer("1.8.0", (api) => {
 
           // match the current field to the rules defined in settings
           const rule = rules.find(r => {
-            const catString = r.category_ids || "";
-            // safely parse the pipe-delimited category string
-            const categoryList = catString.split("|").filter(Boolean).map(id => parseInt(id));
-            return (categoryList.length === 0 || categoryList.includes(currentCategoryId)) && labelText.includes(r.field_label_match);
+            const categoryList = listToArr(r.category_ids).map(id => parseInt(id));
+            const categoryMatch = categoryList.length === 0 || categoryList.includes(currentCategoryId);
+            return categoryMatch && labelText.includes(r.field_label_match);
           });
 
           if (rule) {
@@ -80,9 +83,10 @@ export default apiInitializer("1.8.0", (api) => {
               const select = document.createElement("select");
               select.classList.add("custom-event-dropdown");
               
-              const options = rule.dropdown_options ? rule.dropdown_options.split("|") : ["Select...", "Yes", "No"];
+              const options = listToArr(rule.dropdown_options);
+              const finalOptions = options.length ? options : ["Select...", "Yes", "No"];
               
-              options.forEach(opt => {
+              finalOptions.forEach(opt => {
                 const el = document.createElement("option");
                 const trimmed = opt.trim();
                 const [t, v] = trimmed.includes("|") ? trimmed.split("|") : [trimmed, trimmed];
@@ -109,20 +113,18 @@ export default apiInitializer("1.8.0", (api) => {
                 // apply tags automatically based on the user selection
                 if (rule.tag_mappings) {
                   const validTags = Discourse.Site.currentProp("valid_tags") || [];
-                  const mappings = rule.tag_mappings.split("|");
+                  const mappings = listToArr(rule.tag_mappings);
                   
                   mappings.forEach(m => {
                     const parts = m.split("|");
                     if (parts.length === 2) {
                       const [optVal, tagName] = parts;
                       const cleanTag = tagName.trim();
-                      
                       if (optVal.trim() === val) {
                         // notify if the mapped tag is missing from the site
                         if (!validTags.includes(cleanTag)) {
                           bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist on this site.`);
                         }
-
                         const currentTags = composer.get("model.tags") || [];
                         if (!currentTags.includes(cleanTag)) {
                           currentTags.push(cleanTag);
