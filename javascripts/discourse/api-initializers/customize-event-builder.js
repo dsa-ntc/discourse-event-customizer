@@ -3,12 +3,12 @@ import { apiInitializer } from "discourse/lib/api";
 export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
-      // retrieve automation rules from settings
+      // retrieve rules from theme settings
       const rules = settings?.fields || [];
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // helper to convert strings or arrays into usable lists
+      // helper to convert strings/arrays into usable lists
       const listToArr = (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val;
@@ -17,33 +17,38 @@ export default apiInitializer("1.8.0", (api) => {
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // target the specific rows used by the calendar plugin
-        const rows = modal?.querySelectorAll(".discourse-post-event-builder-form-row.custom-field");
+        // target the flat div structure seen in the inspector
+        const eventFields = modal?.querySelectorAll(".event-field");
         
-        if (!rows?.length) return;
+        if (!eventFields?.length) return;
 
-        rows.forEach((row) => {
-          const label = row.querySelector(".label");
-          const input = row.querySelector("input[type='text']");
-          const valueContainer = row.querySelector(".value");
+        eventFields.forEach((field) => {
+          const label = field.querySelector(".label");
+          const input = field.querySelector("input[type='text']");
+          const controlContainer = field.querySelector(".event-field-control");
           
-          if (!label || !input || !valueContainer) return;
+          if (!label) return;
 
           const labelText = label.textContent.trim().toLowerCase();
-          
-          // find matching rule based on label text and category
+
+          // identify if this specific row is a header we want to hide
+          if (labelText.includes("custom fields") || labelText.includes("allowed custom fields")) {
+            field.classList.add("event-field-to-hide");
+            return;
+          }
+
+          // find matching rule for actual input fields
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
             return categoryMatch && labelMatch;
           });
 
-          if (rule) {
-            // mark the row as transformed for css styling
-            row.classList.add("transformed-custom-field");
-            row.style.display = "flex";
+          if (rule && input && controlContainer) {
+            field.classList.add("transformed-custom-field");
+            field.style.display = "flex";
 
-            if (rule.is_dropdown && !row.querySelector(".custom-event-dropdown")) {
+            if (rule.is_dropdown && !field.querySelector(".custom-event-dropdown")) {
               const select = document.createElement("select");
               select.classList.add("custom-event-dropdown");
               
@@ -61,43 +66,39 @@ export default apiInitializer("1.8.0", (api) => {
 
               select.addEventListener("change", (e) => {
                 input.value = e.target.value;
-                // notify discourse that the input value changed
+                // force discourse to recognize the selection
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
               });
 
-              // hide native input and append our dropdown
               input.style.display = "none";
-              valueContainer.appendChild(select);
+              controlContainer.appendChild(select);
             }
             
-            // move the custom field row to the top of the modal
-            const modalBody = modal.querySelector(".modal-body");
-            const topRow = modalBody?.querySelector(".discourse-post-event-builder-form-row");
-            if (modalBody && topRow && row.previousElementSibling) {
-              modalBody.insertBefore(row, topRow);
+            // move the matched field to the top of the form
+            const form = modal.querySelector("form");
+            const topField = form?.querySelector(".event-field");
+            if (form && topField && field.previousElementSibling) {
+              form.insertBefore(field, topField);
             }
-          } else {
-            // hide fields that do not have a corresponding rule
-            row.style.display = "none";
+          } else if (field.querySelector("input[type='text']") && !rule) {
+            // hide custom fields that aren't explicitly defined in rules
+            field.style.display = "none";
           }
         });
       };
 
-      // watch for dynamic changes in the modal body
+      // observer to catch the dynamic modal content
       const observer = new MutationObserver((mutations, obs) => {
         const modal = document.querySelector(".post-event-builder-modal");
-        if (modal?.querySelectorAll(".custom-field").length > 0) {
+        if (modal?.querySelectorAll(".event-field").length > 0) {
           transformFields();
           obs.disconnect();
         }
       });
 
-      // begin observing to catch the fields as they render
       observer.observe(document.body, { childList: true, subtree: true });
-      
-      // fallback timeout to ensure execution
-      setTimeout(transformFields, 500);
+      setTimeout(transformFields, 600); // slightly longer fallback delay
     }
   });
 });

@@ -1,29 +1,30 @@
 /* visual indicator for required fields */
-.discourse-post-event-builder-form-row.custom-field[data-required="true"] .label::after {
+.event-field.transformed-custom-field[data-required="true"] .label::after {
   content: " *";
   color: var(--danger);
 }
 
 /* modern plugin structure cleanup and layout */
 .post-event-builder-modal {
-  /* hide the redundant plugin headers and instructions seen in image_9ba1c4 */
-  .discourse-post-event-builder-form-row.custom-fields-header,
-  .discourse-post-event-builder-form-row.custom-fields-description {
+  /* hide the header and description divs using the class identified in js */
+  .event-field-to-hide {
     display: none !important;
   }
 
-  /* style for the individual custom field rows moved to top by JS */
-  .discourse-post-event-builder-form-row.custom-field.transformed-custom-field {
+  /* style for the individual custom fields transformed by javascript */
+  .event-field.transformed-custom-field {
     margin-bottom: 1.5em;
     display: flex;
     flex-direction: column;
 
-    .label {
-      font-weight: bold;
+    .event-field-label {
       margin-bottom: 0.5em;
+      .label {
+        font-weight: bold;
+      }
     }
 
-    /* ensure the dropdown matches the native 'Recurrence' menu */
+    /* ensure the dropdown matches native discourse styling */
     select.custom-event-dropdown {
       width: 100%;
       height: 35px;
@@ -34,7 +35,7 @@
       color: var(--primary);
     }
     
-    /* hide the native text input once dropdown is injected */
+    /* hide the native text input once the dropdown is injected */
     input[type="text"] {
       display: none !important;
     }
