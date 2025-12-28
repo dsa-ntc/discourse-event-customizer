@@ -1,113 +1,86 @@
 import { apiInitializer } from "discourse/lib/api";
 
-export default apiInitializer("1.8.0", (api) => {
+// updated to 1.24.0 based on your core source discovery
+export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
-    // modal identifier from the calendar plugin
+    // modal identifier used by the calendar plugin
     if (data?.name === "post-event-builder") {
       
-      // logic fix: try multiple ways to get rules to stop the reference errors
-      const getRules = () => {
-        try {
-          // try standard theme settings service first
-          const service = api.container.lookup("service:theme-settings");
-          if (service) return service.get("fields") || [];
-          
-          // fallback to site settings if theme service is restricted
-          return settings?.fields || [];
-        } catch (e) {
-          return [];
-        }
-      };
-
-      const rules = getRules();
+      // logic fix: retrieve rules from the service to avoid the persistent referenceerror
+      const rulesService = api.container.lookup("service:theme-settings");
+      const rules = rulesService?.get("fields") || [];
+      
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      const listToArr = (val) => {
+      // helper: adopts the { name, value } object pattern found in the plugin source
+      const parseOptions = (val) => {
         if (!val) return [];
-        if (Array.isArray(val)) return val;
-        return typeof val === 'string' ? val.split(/[|,]+/).map(s => s.trim()).filter(Boolean) : [];
+        const rawList = typeof val === 'string' ? val.split(/[|,]+/) : val;
+        return rawList.map(item => {
+          const [name, value] = item.includes("|") ? item.split("|") : [item, item];
+          return { name: name.trim(), value: value.trim() };
+        }).filter(opt => opt.name);
       };
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // target the .event-field class confirmed by your inspector
-        const eventFields = modal?.querySelectorAll(".event-field");
+        // target the specific labels identified in the hbs template
+        const customLabels = modal?.querySelectorAll(".custom-field-label");
         
-        if (!eventFields?.length) return;
+        if (!customLabels?.length) return;
 
-        eventFields.forEach((field) => {
-          // target labels and containers precisely
-          const labelSpan = field.querySelector(".event-field-label .label") || field.querySelector(".label");
-          const controlContainer = field.querySelector(".event-field-control");
-          const input = field.querySelector("input[type='text']");
-          
-          if (!labelSpan) return;
-
+        customLabels.forEach((labelSpan) => {
           const labelText = labelSpan.textContent.trim().toLowerCase();
+          // the input is the immediate next sibling in the plugin template
+          const input = labelSpan.nextElementSibling;
+          
+          if (!input || input.tagName !== "INPUT") return;
 
-          // hide redundant header and description rows
-          if (labelText.includes("custom fields") || labelText.includes("allowed custom fields")) {
-            field.classList.add("event-field-to-hide");
-            field.style.setProperty("display", "none", "important");
-            return;
-          }
-
-          // match the label "include cal" to your rules
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
             return categoryMatch && labelMatch;
           });
 
-          if (rule && input && controlContainer) {
-            field.classList.add("transformed-custom-field");
-            field.style.display = "flex";
+          if (rule && rule.is_dropdown) {
+            if (labelSpan.dataset.transformed === "true") return;
+            labelSpan.dataset.transformed = "true";
 
-            if (rule.is_dropdown && !field.querySelector(".custom-event-dropdown")) {
-              const select = document.createElement("select");
-              select.classList.add("custom-event-dropdown");
-              
-              const options = listToArr(rule.dropdown_options);
-              const finalOptions = options.length ? options : ["select...", "yes", "no"];
-              
-              finalOptions.forEach(opt => {
-                const el = document.createElement("option");
-                const [t, v] = opt.includes("|") ? opt.split("|") : [opt, opt];
-                el.textContent = t.trim(); 
-                el.value = v.trim();
-                if (input.value === el.value) el.selected = true;
-                select.appendChild(el);
-              });
-
-              select.addEventListener("change", (e) => {
-                input.value = e.target.value;
-                // notify discourse that the input has changed
-                input.dispatchEvent(new Event("input", { bubbles: true }));
-                input.dispatchEvent(new Event("change", { bubbles: true }));
-              });
-
-              input.style.display = "none";
-              controlContainer.appendChild(select);
-            }
+            const select = document.createElement("select");
+            select.classList.add("custom-event-dropdown");
             
-            // move the field to the top of the form body
-            const modalBody = modal.querySelector(".modal-body form") || modal.querySelector("form");
-            const firstField = modalBody?.querySelector(".event-field");
-            if (modalBody && firstField && field !== firstField) {
-              modalBody.insertBefore(field, firstField);
-            }
-          } else if (input && !rule) {
-            // hide any custom field not defined in the theme rules
-            field.style.display = "none";
+            const options = parseOptions(rule.dropdown_options);
+            const finalOptions = options.length ? options : [
+              { name: "select...", value: "" },
+              { name: "yes", value: "yes" },
+              { name: "no", value: "no" }
+            ];
+            
+            finalOptions.forEach(opt => {
+              const el = document.createElement("option");
+              el.textContent = opt.name;
+              el.value = opt.value;
+              if (input.value === el.value) el.selected = true;
+              select.appendChild(el);
+            });
+
+            select.addEventListener("change", (e) => {
+              input.value = e.target.value;
+              // trigger 'input' so the hbs {{on "input"}} listener fires correctly
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+
+            input.style.setProperty("display", "none", "important");
+            labelSpan.after(select);
           }
         });
       };
 
-      // observer to handle dynamic loading of the form component
+      // wait for the dynamic glimmer custom field component to finish rendering
       const observer = new MutationObserver(() => {
         const modal = document.querySelector(".post-event-builder-modal");
-        if (modal?.querySelectorAll(".event-field").length > 0) {
+        if (modal?.querySelector(".custom-field-label")) {
           transformFields();
           observer.disconnect();
         }

@@ -1,49 +1,32 @@
-/* visual indicator for required fields */
-.event-field.transformed-custom-field[data-required="true"] .label::after {
-  content: " *";
-  color: var(--danger);
-}
-
-/* cleanup and layout for the event builder modal */
+/* cleanup and layout for the custom fields section */
 .post-event-builder-modal {
-  /* hide redundant headers */
-  .event-field-to-hide {
+  /* hide the description paragraph and redundant header labels */
+  .event-field-description,
+  .event-field-label .label {
     display: none !important;
   }
 
-  /* force layout for fields moved to the top */
-  .event-field.transformed-custom-field {
-    margin-bottom: 1.5em !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
+  /* stack labels and dropdowns inside the custom field area */
+  .custom-field-label {
+    display: block !important;
+    font-weight: bold !important;
+    margin-top: 1em !important;
+    margin-bottom: 0.5em !important;
+  }
 
-    .event-field-label {
-      margin-bottom: 0.5em !important;
-      display: block !important;
-      width: 100% !important;
+  select.custom-event-dropdown {
+    width: 100% !important;
+    height: 35px !important;
+    padding: 0 0.5em !important;
+    border: 1px solid var(--primary-low) !important;
+    border-radius: 4px !important;
+    background-color: var(--secondary) !important;
+    color: var(--primary) !important;
+    display: block !important;
+  }
 
-      .label {
-        font-weight: bold !important;
-        display: inline-block !important;
-        color: var(--primary) !important;
-      }
-    }
-
-    /* match native discourse dropdown styling */
-    select.custom-event-dropdown {
-      width: 100% !important;
-      height: 35px !important;
-      padding: 0 0.5em !important;
-      border: 1px solid var(--primary-low) !important;
-      border-radius: 4px !important;
-      background-color: var(--secondary) !important;
-      color: var(--primary) !important;
-    }
-    
-    /* force hide the native text input once dropdown is ready */
-    input[type="text"] {
-      display: none !important;
-    }
+  /* ensure the text input is hidden when the script triggers the transformation */
+  .custom-field-input {
+    display: none !important;
   }
 }
