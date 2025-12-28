@@ -3,12 +3,15 @@ import { apiInitializer } from "discourse/lib/api";
 export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
-      // retrieve automation rules from theme settings
-      const rules = settings?.fields || [];
+      
+      // robust retrieval of settings to fix the referenceerror
+      const themeSettings = api.container.lookup("service:theme-settings") || {};
+      const rules = themeSettings.fields || [];
+      
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // helper to parse string lists or arrays
+      // helper to convert strings or arrays into usable lists
       const listToArr = (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val;
@@ -17,13 +20,13 @@ export default apiInitializer("1.8.0", (api) => {
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // target the flat event-field structure from your console check
+        // target the flat event-field structure confirmed by your console
         const eventFields = modal?.querySelectorAll(".event-field");
         
         if (!eventFields?.length) return;
 
         eventFields.forEach((field) => {
-          // find the label span and the control container specifically
+          // target labels and containers using inspector hierarchy
           const labelSpan = field.querySelector(".event-field-label .label") || field.querySelector(".label");
           const controlContainer = field.querySelector(".event-field-control");
           const input = field.querySelector("input[type='text']");
@@ -32,14 +35,14 @@ export default apiInitializer("1.8.0", (api) => {
 
           const labelText = labelSpan.textContent.trim().toLowerCase();
 
-          // hide the redundant headers seen in your screenshots
+          // hide the redundant plugin headers seen in your screenshots
           if (labelText.includes("custom fields") || labelText.includes("allowed custom fields")) {
             field.classList.add("event-field-to-hide");
             field.style.setProperty("display", "none", "important");
             return;
           }
 
-          // find matching rule based on the exact label text
+          // find matching rule for actual input fields
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
@@ -47,7 +50,6 @@ export default apiInitializer("1.8.0", (api) => {
           });
 
           if (rule && input && controlContainer) {
-            // mark for css styling and ensure visibility
             field.classList.add("transformed-custom-field");
             field.style.display = "flex";
 
@@ -69,7 +71,7 @@ export default apiInitializer("1.8.0", (api) => {
 
               select.addEventListener("change", (e) => {
                 input.value = e.target.value;
-                // trigger events so the create button works
+                // notify discourse that the input value changed
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
               });
@@ -78,20 +80,20 @@ export default apiInitializer("1.8.0", (api) => {
               controlContainer.appendChild(select);
             }
             
-            // physically move the field to the top of the form list
-            const form = modal.querySelector("form");
-            const topField = form?.querySelector(".event-field");
-            if (form && topField && field.previousElementSibling) {
-              form.insertBefore(field, topField);
+            // move the matched field to the top of the modal body
+            const modalBody = modal.querySelector(".modal-body #ember80 form") || modal.querySelector("form");
+            const firstField = modalBody?.querySelector(".event-field");
+            if (modalBody && firstField && field !== firstField) {
+              modalBody.insertBefore(field, firstField);
             }
           } else if (input && !rule) {
-            // hide any custom fields that aren't defined in your rules
+            // hide any custom field that does not have a theme rule
             field.style.display = "none";
           }
         });
       };
 
-      // wait for the plugin to finish building the modal
+      // observer to handle dynamic modal loading
       const observer = new MutationObserver(() => {
         const modal = document.querySelector(".post-event-builder-modal");
         if (modal?.querySelectorAll(".event-field").length > 0) {
@@ -101,7 +103,7 @@ export default apiInitializer("1.8.0", (api) => {
       });
 
       observer.observe(document.body, { childList: true, subtree: true });
-      setTimeout(transformFields, 700); // safety fallback delay
+      setTimeout(transformFields, 800); // fallback delay
     }
   });
 });
