@@ -1,93 +1,81 @@
 import { apiInitializer } from "discourse/lib/api";
 
-// updated to 1.24.0 based on your core source discovery
 export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
-    // modal identifier used by the calendar plugin
-    if (data?.name === "post-event-builder") {
-      
-      // logic fix: retrieve rules from the service to avoid the persistent referenceerror
-      const rulesService = api.container.lookup("service:theme-settings");
-      const rules = rulesService?.get("fields") || [];
-      
-      const composer = api.container.lookup("controller:composer");
-      const currentCategoryId = composer?.get("model.category.id");
+    if (data?.name !== "post-event-builder") return;
 
-      // helper: adopts the { name, value } object pattern found in the plugin source
-      const parseOptions = (val) => {
-        if (!val) return [];
-        const rawList = typeof val === 'string' ? val.split(/[|,]+/) : val;
-        return rawList.map(item => {
-          const [name, value] = item.includes("|") ? item.split("|") : [item, item];
-          return { name: name.trim(), value: value.trim() };
-        }).filter(opt => opt.name);
-      };
+    // logic change: use a direct closure for rules to bypass the referenceerror
+    const activeRules = (() => {
+      try {
+        const themeSettings = api.container.lookup("service:theme-settings");
+        return themeSettings?.get("fields") || [];
+      } catch (e) {
+        return [];
+      }
+    })();
 
-      const transformFields = () => {
-        const modal = document.querySelector(".post-event-builder-modal");
-        // target the specific labels identified in the hbs template
-        const customLabels = modal?.querySelectorAll(".custom-field-label");
-        
-        if (!customLabels?.length) return;
+    const composer = api.container.lookup("controller:composer");
+    const categoryId = composer?.get("model.category.id");
 
-        customLabels.forEach((labelSpan) => {
-          const labelText = labelSpan.textContent.trim().toLowerCase();
-          // the input is the immediate next sibling in the plugin template
-          const input = labelSpan.nextElementSibling;
-          
-          if (!input || input.tagName !== "INPUT") return;
+    const injectDropdown = () => {
+      const modal = document.querySelector(".post-event-builder-modal");
+      // target the specific span from the plugin source you identified
+      const labels = modal?.querySelectorAll(".custom-field-label");
 
-          const rule = rules.find(r => {
-            const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
-            const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
-            return categoryMatch && labelMatch;
+      labels?.forEach((label) => {
+        if (label.dataset.processed === "true") return;
+
+        const text = label.textContent.trim().toLowerCase();
+        // the input is the immediate next sibling in the template
+        const nativeInput = label.nextElementSibling;
+
+        if (!nativeInput || nativeInput.tagName !== "INPUT") return;
+
+        const rule = activeRules.find(r => {
+          const catMatch = !r.target_categories?.length || r.target_categories.includes(categoryId);
+          const labelMatch = r.field_label_match && text.includes(r.field_label_match.toLowerCase());
+          return catMatch && labelMatch;
+        });
+
+        if (rule?.is_dropdown) {
+          label.dataset.processed = "true";
+          const dropdown = document.createElement("select");
+          dropdown.classList.add("custom-event-dropdown");
+
+          // parse rules: label|value format
+          const opts = (rule.dropdown_options || "").split(/[|,]+/).map(o => {
+            const [n, v] = o.includes("|") ? o.split("|") : [o, o];
+            return { name: n.trim(), value: v.trim() };
           });
 
-          if (rule && rule.is_dropdown) {
-            if (labelSpan.dataset.transformed === "true") return;
-            labelSpan.dataset.transformed = "true";
+          opts.forEach(o => {
+            const opt = document.createElement("option");
+            opt.textContent = o.name;
+            opt.value = o.value;
+            if (nativeInput.value === o.value) opt.selected = true;
+            dropdown.appendChild(opt);
+          });
 
-            const select = document.createElement("select");
-            select.classList.add("custom-event-dropdown");
-            
-            const options = parseOptions(rule.dropdown_options);
-            const finalOptions = options.length ? options : [
-              { name: "select...", value: "" },
-              { name: "yes", value: "yes" },
-              { name: "no", value: "no" }
-            ];
-            
-            finalOptions.forEach(opt => {
-              const el = document.createElement("option");
-              el.textContent = opt.name;
-              el.value = opt.value;
-              if (input.value === el.value) el.selected = true;
-              select.appendChild(el);
-            });
+          dropdown.addEventListener("change", (e) => {
+            nativeInput.value = e.target.value;
+            // dispatch input event so the plugin's {{on "input"}} listener triggers
+            nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+          });
 
-            select.addEventListener("change", (e) => {
-              input.value = e.target.value;
-              // trigger 'input' so the hbs {{on "input"}} listener fires correctly
-              input.dispatchEvent(new Event("input", { bubbles: true }));
-            });
-
-            input.style.setProperty("display", "none", "important");
-            labelSpan.after(select);
-          }
-        });
-      };
-
-      // wait for the dynamic glimmer custom field component to finish rendering
-      const observer = new MutationObserver(() => {
-        const modal = document.querySelector(".post-event-builder-modal");
-        if (modal?.querySelector(".custom-field-label")) {
-          transformFields();
-          observer.disconnect();
+          nativeInput.style.setProperty("display", "none", "important");
+          label.after(dropdown);
         }
       });
+    };
 
-      observer.observe(document.body, { childList: true, subtree: true });
-      setTimeout(transformFields, 800);
-    }
+    const observer = new MutationObserver(() => {
+      if (document.querySelector(".custom-field-label")) {
+        injectDropdown();
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(injectDropdown, 500);
   });
 });

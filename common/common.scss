@@ -1,6 +1,5 @@
-/* cleanup and layout for the custom fields section */
 .post-event-builder-modal {
-  /* hide the description paragraph and redundant header labels */
+  /* hide the description text and redundant plugin labels */
   .event-field-description,
   .event-field-label .label {
     display: none !important;
@@ -10,22 +9,20 @@
   .custom-field-label {
     display: block !important;
     font-weight: bold !important;
-    margin-top: 1em !important;
-    margin-bottom: 0.5em !important;
+    margin: 10px 0 5px 0 !important;
   }
 
   select.custom-event-dropdown {
     width: 100% !important;
-    height: 35px !important;
-    padding: 0 0.5em !important;
-    border: 1px solid var(--primary-low) !important;
-    border-radius: 4px !important;
-    background-color: var(--secondary) !important;
-    color: var(--primary) !important;
     display: block !important;
+    height: 35px !important;
+    background: var(--secondary);
+    color: var(--primary);
+    border: 1px solid var(--primary-low);
+    border-radius: 4px;
   }
 
-  /* ensure the text input is hidden when the script triggers the transformation */
+  /* ensure native inputs stay hidden */
   .custom-field-input {
     display: none !important;
   }
