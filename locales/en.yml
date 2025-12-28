@@ -2,15 +2,21 @@ en:
   theme_metadata:
     settings:
       event_custom_field_rules: "Custom field rules"
-      event_custom_field_rules_description: "Manage how custom fields are transformed into dropdowns, mapped to tags, or injected into posts."
+      event_custom_field_rules_description: |
+        Manage how custom fields are transformed into dropdowns, 
+        mapped to tags, or injected into posts.
       event_rule:
-        field_label_match: "Custom field label"
-        field_label_match_description: "Exact label of the custom field (e.g., Include in national calendar?)"
-        target_categories: "Apply to categories"
-        target_categories_description: "Categories where this rule applies. Leave empty to apply globally."
-        is_dropdown: "Convert to dropdown"
-        dropdown_options: "Dropdown options"
-        auto_include_in_post: "Auto-include in post text"
-        is_required: "Make the field required"
+        field_label_match: Custom field label
+        field_label_match_description: Exact label of the custom field (e.g., Include in national calendar?)
+        target_categories: Apply to categories
+        target_categories_description: Categories where this rule applies. Leave empty to apply globally.
+        is_dropdown: Convert to dropdown
+        dropdown_options: Dropdown options
+        auto_include_in_post: Auto-include in post text
+        is_required: Make the field required
         tag_mappings: "Tag mappings (Value|Tag)"
-        tag_mappings_description: "Format: Value|Tag (e.g., Yes|national-event). Ensure tags exist on the site."
+        tag_mappings_description: |
+          If tags should be added and mapped based on the dropdown fields, 
+          manually enter mappings as Value|Tag. 
+          <br><br>
+          Note: tags must currently exist and be typed exactly as they appear.

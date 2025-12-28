@@ -25,7 +25,6 @@ export default apiInitializer("1.8.0", (api) => {
 
           if (!fieldContainers.length) return;
 
-          // validation logic to ensure required fields are filled before creation
           const checkValidation = () => {
             let allValid = true;
             fieldContainers.forEach(container => {
@@ -37,7 +36,6 @@ export default apiInitializer("1.8.0", (api) => {
             if (createBtn) createBtn.disabled = !allValid;
           };
 
-          // confirmation dialog logic using global window.bootbox
           const handleCancel = (e) => {
             let hasData = false;
             fieldContainers.forEach(container => {
@@ -64,7 +62,7 @@ export default apiInitializer("1.8.0", (api) => {
 
             const labelText = label.textContent.trim() || "";
 
-            // match the current field to rules defined in settings using target_categories
+            // match current field to rules defined in settings
             const rule = rules.find(r => {
               const categoryList = listToArr(r.target_categories).map(id => parseInt(id));
               const categoryMatch = categoryList.length === 0 || categoryList.includes(currentCategoryId);
@@ -75,11 +73,9 @@ export default apiInitializer("1.8.0", (api) => {
               container.style.display = "block";
               if (rule.is_required) container.dataset.required = "true";
 
-              // transform standard input into a dropdown
               if (rule.is_dropdown && !container.querySelector(".custom-event-dropdown")) {
                 const select = document.createElement("select");
                 select.classList.add("custom-event-dropdown");
-                
                 const options = listToArr(rule.dropdown_options);
                 const finalOptions = options.length ? options : ["Select...", "Yes", "No"];
                 
@@ -107,20 +103,17 @@ export default apiInitializer("1.8.0", (api) => {
                   const val = input.value;
                   if (!val || val === "Select...") return;
 
-                  // apply tags automatically based on the user selection
                   if (rule.tag_mappings) {
                     const validTags = Discourse.Site.currentProp("valid_tags") || [];
                     const mappings = listToArr(rule.tag_mappings);
-                    
                     mappings.forEach(m => {
                       const parts = m.split("|");
                       if (parts.length === 2) {
                         const [optVal, tagName] = parts;
                         const cleanTag = tagName.trim();
                         if (optVal.trim() === val) {
-                          // notify if mapped tag is missing using window.bootbox
                           if (!validTags.includes(cleanTag) && window.bootbox) {
-                            window.bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist on this site.`);
+                            window.bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist.`);
                           }
                           const currentTags = composer.get("model.tags") || [];
                           if (!currentTags.includes(cleanTag)) {
@@ -132,7 +125,6 @@ export default apiInitializer("1.8.0", (api) => {
                     });
                   }
 
-                  // append styled metadata block to the topic text
                   if (rule.auto_include_in_post) {
                     const content = `**${rule.field_label_match}:** ${val}`;
                     const injection = `\n\n<div class="event-metadata">\n${content}\n</div>`;
@@ -144,14 +136,12 @@ export default apiInitializer("1.8.0", (api) => {
                 }, { once: true });
               }
             } else {
-              // hide fields that don't apply to this category
               container.style.display = "none";
             }
           });
-
           checkValidation();
         } catch (err) {
-          console.error("[event customizer] initialization failed:", err);
+          console.error("[event customizer] error:", err);
         }
       }, 200);
     }
