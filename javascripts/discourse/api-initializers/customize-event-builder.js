@@ -4,26 +4,21 @@ export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name !== "post-event-builder") return;
 
-    // fix: aggressive lookup with an emergency fallback for your specific field
-    const getRules = () => {
-      try {
-        const service = api.container.lookup("service:theme-settings");
-        const rules = service?.fields || service?._fields || [];
-        if (rules && rules.length > 0) return rules;
-      } catch (e) {
-        console.warn("theme settings service not ready; using emergency fallback.");
-      }
-      // fallback rule specifically for your "include cal" field
-      return [{
-        field_label_match: "include cal",
-        is_dropdown: true,
-        dropdown_options: "Yes|yes, No|no"
-      }];
-    };
+    // fix: bypass .get() typeerror by using direct property access
+    const settingsService = api.container.lookup("service:theme-settings");
+    const rawRules = settingsService?.fields || settingsService?._fields || [];
 
-    const activeRules = getRules();
+    // parse strings like "include cal : checkbox"
+    const rules = rawRules.map(ruleString => {
+      const parts = ruleString.split(":").map(s => s.trim());
+      return { 
+        label: parts[0]?.toLowerCase(), 
+        type: parts[1]?.toLowerCase(), 
+        options: parts[2] // only used for dropdowns
+      };
+    });
 
-    const injectDropdown = () => {
+    const injectField = () => {
       const modal = document.querySelector(".post-event-builder-modal");
       // target specific labels identified in the plugin hbs template
       const labels = modal?.querySelectorAll(".custom-field-label");
@@ -31,55 +26,73 @@ export default apiInitializer("1.24.0", (api) => {
       labels?.forEach((label) => {
         if (label.dataset.processed === "true") return;
 
-        const text = label.textContent.trim().toLowerCase();
+        const labelText = label.textContent.trim().toLowerCase();
         const nativeInput = label.nextElementSibling;
 
         if (!nativeInput || nativeInput.tagName !== "INPUT") return;
 
-        // check if this label matches our rules (or our fallback)
-        const rule = activeRules.find(r => r.field_label_match && text.includes(r.field_label_match.toLowerCase()));
+        const rule = rules.find(r => labelText.includes(r.label));
 
-        if (rule?.is_dropdown) {
+        if (rule) {
           label.dataset.processed = "true";
-          const dropdown = document.createElement("select");
-          dropdown.classList.add("custom-event-dropdown");
-
-          // parse options from the rule
-          const opts = (rule.dropdown_options || "Yes|yes, No|no").split(/[|,]+/).map(o => {
-            const [n, v] = o.includes("|") ? o.split("|") : [o, o];
-            return { name: n.trim(), value: v.trim() };
-          });
-
-          opts.forEach(o => {
-            const opt = document.createElement("option");
-            opt.textContent = o.name;
-            opt.value = o.value;
-            if (nativeInput.value === o.value) opt.selected = true;
-            dropdown.appendChild(opt);
-          });
-
-          dropdown.addEventListener("change", (e) => {
-            nativeInput.value = e.target.value;
-            // dispatch input so the plugin's hbs listener saves the data
-            nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
-          });
-
-          // force hide the native input and inject our select
           nativeInput.style.setProperty("display", "none", "important");
-          label.after(dropdown);
+
+          if (rule.type === "checkbox") {
+            const checkWrap = document.createElement("label");
+            checkWrap.classList.add("custom-event-checkbox-wrap");
+            
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            // checkboxes are boolean: "yes" if checked, "no" if not
+            checkbox.checked = nativeInput.value === "yes";
+            
+            checkbox.addEventListener("change", (e) => {
+              nativeInput.value = e.target.checked ? "yes" : "no";
+              // trigger hbs {{on "input"}} listener to save
+              nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+            
+            label.after(checkWrap);
+            checkWrap.appendChild(checkbox);
+          } 
+          else if (rule.type === "dropdown") {
+            const select = document.createElement("select");
+            select.classList.add("custom-event-dropdown");
+            
+            // default dropdown options if none provided in string
+            const opts = (rule.options || "Yes|yes, No|no").split(/[|,]+/).map(o => {
+              const [n, v] = o.includes("|") ? o.split("|") : [o, o];
+              return { name: n.trim(), value: v.trim() };
+            });
+
+            opts.forEach(o => {
+              const opt = document.createElement("option");
+              opt.textContent = o.name;
+              opt.value = o.value;
+              if (nativeInput.value === o.value) opt.selected = true;
+              select.appendChild(opt);
+            });
+
+            select.addEventListener("change", (e) => {
+              nativeInput.value = e.target.value;
+              nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+
+            label.after(select);
+          }
         }
       });
     };
 
-    // monitor the modal for custom fields
+    // monitor for the appearance of custom field labels
     const observer = new MutationObserver(() => {
       if (document.querySelector(".custom-field-label")) {
-        injectDropdown();
+        injectField();
         observer.disconnect();
       }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(injectDropdown, 600);
+    setTimeout(injectField, 600);
   });
 });

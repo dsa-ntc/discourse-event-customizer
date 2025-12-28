@@ -1,29 +1,43 @@
 .post-event-builder-modal {
-  /* hide description and redundant headers from the plugin template */
+  /* hide description and redundant headers from the plugin */
   .event-field-description,
   .event-field-label .label {
     display: none !important;
   }
 
-  /* stack labels and dropdowns vertically */
+  /* align "include cal" with its checkbox */
   .custom-field-label {
-    display: block !important;
+    display: inline-block !important;
     font-weight: bold !important;
-    margin: 15px 0 5px 0 !important;
+    margin-top: 15px !important;
+    margin-right: 10px !important;
     color: var(--primary) !important;
+    vertical-align: middle !important;
   }
 
+  .custom-event-checkbox-wrap {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin-top: 15px !important;
+
+    input {
+      width: 18px !important;
+      height: 18px !important;
+      cursor: pointer !important;
+      accent-color: var(--tertiary);
+    }
+  }
+
+  /* styling for the dropdown */
   select.custom-event-dropdown {
-    width: 100% !important;
     display: block !important;
+    width: 100% !important;
     height: 35px !important;
-    background: var(--secondary) !important;
-    color: var(--primary) !important;
-    border: 1px solid var(--primary-low) !important;
-    border-radius: 4px !important;
-    padding: 0 5px !important;
-    font-size: var(--font-0) !important;
-    cursor: pointer !important;
+    background: var(--secondary);
+    color: var(--primary);
+    border: 1px solid var(--primary-low);
+    border-radius: 4px;
+    margin-top: 5px;
   }
 
   /* ensure native text inputs stay hidden */

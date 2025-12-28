@@ -1,25 +1,3 @@
 fields:
-  type: objects
-  default: []
-  schema:
-    name: event_rule
-    identifier: field_label_match
-    properties:
-      field_label_match:
-        type: string
-        required: true
-        validations:
-          min: 1
-          max: 50
-      target_categories:
-        type: categories
-      is_dropdown:
-        type: boolean
-        default: true
-      dropdown_options:
-        type: string
-        list_type: simple
-        default: "Select...|Yes|No"
-      auto_include_in_post:
-        type: boolean
-        default: false
+  type: list
+  default: "custom field name : checkbox"
