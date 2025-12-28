@@ -6,12 +6,12 @@
 
 /* modern plugin structure cleanup and layout */
 .post-event-builder-modal {
-  /* hide the header and description divs identified in your inspector */
+  /* hide the redundant header rows identified by the script */
   .event-field-to-hide {
     display: none !important;
   }
 
-  /* style for the individual custom fields transformed by javascript */
+  /* layout for fields moved to the top */
   .event-field.transformed-custom-field {
     margin-bottom: 1.5em;
     display: flex;
@@ -21,28 +21,29 @@
       margin-bottom: 0.5em;
       .label {
         font-weight: bold;
+        display: block;
       }
     }
 
-    /* ensure the dropdown matches native discourse dimensions */
+    /* match native discourse dropdown styling */
     select.custom-event-dropdown {
       width: 100%;
       height: 35px;
-      padding: 0.5em;
+      padding: 0 0.5em;
       border: 1px solid var(--primary-low);
       border-radius: 4px;
       background-color: var(--secondary);
       color: var(--primary);
     }
     
-    /* hide the native text input once the dropdown is injected */
+    /* hide the native text input once dropdown is ready */
     input[type="text"] {
       display: none !important;
     }
   }
 }
 
-/* metadata styling to match discourse calendar event box */
+/* metadata styling for post display */
 .event-metadata {
   margin-top: -1px;
   padding: 10px 15px;
