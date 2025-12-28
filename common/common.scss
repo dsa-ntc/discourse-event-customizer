@@ -6,12 +6,12 @@
 
 /* cleanup and layout for the event builder modal */
 .post-event-builder-modal {
-  /* hide specific redundant rows identified by the script */
+  /* hide redundant headers */
   .event-field-to-hide {
     display: none !important;
   }
 
-  /* layout for fields moved to the top */
+  /* force layout for fields moved to the top */
   .event-field.transformed-custom-field {
     margin-bottom: 1.5em !important;
     display: flex !important;
