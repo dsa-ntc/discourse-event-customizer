@@ -1,10 +1,4 @@
 .post-event-builder-modal {
-  /* hide the original custom field header and 'optional' text */
-  .event-field-label .label,
-  .event-field-description,
-  .custom-field-input {
-    display: none !important;
-  }
 
   /* ensure our injected row matches the native layout */
   .checkbox-label.injected-custom-field {
