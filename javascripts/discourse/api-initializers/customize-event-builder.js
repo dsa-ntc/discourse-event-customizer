@@ -3,10 +3,12 @@ import { apiInitializer } from "discourse/lib/api";
 export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
+      // retrieve automation rules from settings
       const rules = settings?.fields || [];
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
+      // helper to convert strings or arrays into usable lists
       const listToArr = (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val;
@@ -15,7 +17,7 @@ export default apiInitializer("1.8.0", (api) => {
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // Target the specific form rows used by the Discourse Post Event plugin
+        // target the specific rows used by the calendar plugin
         const rows = modal?.querySelectorAll(".discourse-post-event-builder-form-row.custom-field");
         
         if (!rows?.length) return;
@@ -28,6 +30,8 @@ export default apiInitializer("1.8.0", (api) => {
           if (!label || !input || !valueContainer) return;
 
           const labelText = label.textContent.trim().toLowerCase();
+          
+          // find matching rule based on label text and category
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
@@ -35,7 +39,7 @@ export default apiInitializer("1.8.0", (api) => {
           });
 
           if (rule) {
-            // Add the class your CSS expects
+            // mark the row as transformed for css styling
             row.classList.add("transformed-custom-field");
             row.style.display = "flex";
 
@@ -44,7 +48,7 @@ export default apiInitializer("1.8.0", (api) => {
               select.classList.add("custom-event-dropdown");
               
               const options = listToArr(rule.dropdown_options);
-              const finalOptions = options.length ? options : ["Select...", "Yes", "No"];
+              const finalOptions = options.length ? options : ["select...", "yes", "no"];
               
               finalOptions.forEach(opt => {
                 const el = document.createElement("option");
@@ -57,39 +61,42 @@ export default apiInitializer("1.8.0", (api) => {
 
               select.addEventListener("change", (e) => {
                 input.value = e.target.value;
-                // Force Discourse to recognize the change
+                // notify discourse that the input value changed
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
               });
 
+              // hide native input and append our dropdown
               input.style.display = "none";
               valueContainer.appendChild(select);
             }
             
-            // Move field to top of modal body
+            // move the custom field row to the top of the modal
             const modalBody = modal.querySelector(".modal-body");
             const topRow = modalBody?.querySelector(".discourse-post-event-builder-form-row");
             if (modalBody && topRow && row.previousElementSibling) {
               modalBody.insertBefore(row, topRow);
             }
           } else {
+            // hide fields that do not have a corresponding rule
             row.style.display = "none";
           }
         });
       };
 
-      // Use an observer to catch the dynamic rendering
+      // watch for dynamic changes in the modal body
       const observer = new MutationObserver((mutations, obs) => {
         const modal = document.querySelector(".post-event-builder-modal");
         if (modal?.querySelectorAll(".custom-field").length > 0) {
           transformFields();
-          obs.disconnect(); // Stop watching once fields are found
+          obs.disconnect();
         }
       });
 
+      // begin observing to catch the fields as they render
       observer.observe(document.body, { childList: true, subtree: true });
       
-      // Safety timeout in case observer fails
+      // fallback timeout to ensure execution
       setTimeout(transformFields, 500);
     }
   });
