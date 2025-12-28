@@ -1,22 +1,29 @@
 .post-event-builder-modal {
-  /* hide description and redundant headers from the plugin */
+  /* hide description text from the native plugin template */
   .event-field-description,
   .event-field-label .label {
     display: none !important;
   }
 
-  /* layout for checkbox and label side-by-side */
+  /* force our new checkbox row to be visible and aligned */
   .custom-checkbox-row {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
-    margin-top: 15px !important;
-    gap: 10px !important;
+    margin: 15px 0 !important;
+    padding: 5px 0 !important;
+    gap: 12px !important;
 
-    input[type="checkbox"] {
-      width: 18px !important;
-      height: 18px !important;
+    input.event-builder-checkbox {
+      appearance: checkbox !important; // ensure OS default look
+      width: 20px !important;
+      height: 20px !important;
       cursor: pointer !important;
       margin: 0 !important;
+      flex-shrink: 0 !important;
+      display: inline-block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .custom-field-label {
@@ -25,9 +32,11 @@
       margin: 0 !important;
       color: var(--primary) !important;
       cursor: pointer !important;
+      font-size: var(--font-0) !important;
     }
   }
 
+  /* hide the original text input */
   .custom-field-input {
     display: none !important;
   }

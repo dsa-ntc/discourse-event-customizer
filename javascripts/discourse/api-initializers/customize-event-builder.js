@@ -4,12 +4,12 @@ export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name !== "post-event-builder") return;
 
-    // use the global settings object directly
-    const checkboxTargets = settings.fields || [];
+    // ensure settings.fields is treated as an array even if empty
+    const checkboxTargets = Array.isArray(settings?.fields) ? settings.fields : [];
 
     const injectCheckbox = () => {
       const modal = document.querySelector(".post-event-builder-modal");
-      // target labels confirmed by the plugin's template
+      // target all spans within the custom field area
       const labels = modal?.querySelectorAll(".custom-field-label");
 
       labels?.forEach((label) => {
@@ -19,12 +19,14 @@ export default apiInitializer("1.24.0", (api) => {
         
         // match the label text against your list in settings
         const shouldTransform = checkboxTargets.some(t => 
-          text.includes(t.toLowerCase().trim())
+          text.includes(String(t).toLowerCase().trim())
         );
 
         if (shouldTransform) {
-          const nativeInput = label.nextElementSibling;
-          if (!nativeInput || nativeInput.tagName !== "INPUT") return;
+          // find the input: it's either a sibling or inside a nearby wrapper
+          const nativeInput = label.parentElement.querySelector("input:not([type='checkbox'])");
+          
+          if (!nativeInput) return;
 
           label.dataset.processed = "true";
 
@@ -33,35 +35,32 @@ export default apiInitializer("1.24.0", (api) => {
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
+          checkbox.classList.add("event-builder-checkbox");
           
-          // sync initial state: check if the string value is "yes"
+          // sync initial state: Discourse plugin uses "yes" as a string
           checkbox.checked = nativeInput.value === "yes";
 
           checkbox.addEventListener("change", (e) => {
-            // map checkbox state to boolean strings for plugin compatibility
             nativeInput.value = e.target.checked ? "yes" : "no";
-            // trigger plugin's native save listener
+            // dispatch input event so Glimmer/Ember picks up the change
             nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
           });
 
-          // hide the text input and show the checkbox
-          nativeInput.style.setProperty("display", "none", "important");
-          label.after(row);
+          // style the wrapper and inject
+          nativeInput.style.display = "none";
+          label.parentNode.insertBefore(row, label);
           row.appendChild(checkbox);
           row.appendChild(label); 
         }
       });
     };
 
-    // monitor the modal for custom field appearance
-    const observer = new MutationObserver(() => {
-      if (document.querySelector(".custom-field-label")) {
-        injectCheckbox();
-        observer.disconnect();
-      }
-    });
-
+    // immediate attempt plus a mutation observer for late-loading fields
+    const observer = new MutationObserver(injectCheckbox);
     observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(injectCheckbox, 600);
+    
+    // fallback timeouts
+    setTimeout(injectCheckbox, 300);
+    setTimeout(injectCheckbox, 1000);
   });
 });
