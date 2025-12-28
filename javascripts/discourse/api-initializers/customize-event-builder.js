@@ -13,18 +13,25 @@ export default apiInitializer("1.8.0", (api) => {
         return typeof val === 'string' ? val.split(/[|,]+/).map(s => s.trim()).filter(Boolean) : [];
       };
 
-      setTimeout(() => {
-        try {
-          // updated selector to match the calendar plugin's specific markup
-          const fieldRows = document.querySelectorAll(".post-event-builder-modal .custom-field-row");
-          const modalBody = document.querySelector(".post-event-builder-modal .modal-body");
-          const firstSection = modalBody?.querySelector(".event-builder-section");
+      // We use a recurring check to ensure the plugin has finished building the modal
+      let attempts = 0;
+      const transformInterval = setInterval(() => {
+        attempts++;
+        const modal = document.querySelector(".post-event-builder-modal");
+        // Looking specifically for the custom field container used by the plugin
+        const customFieldWrappers = modal?.querySelectorAll(".discourse-post-event-builder-form-row.custom-field");
+        
+        if (customFieldWrappers?.length || attempts > 20) {
+          clearInterval(transformInterval);
+          
+          if (!customFieldWrappers?.length) return;
 
-          if (!fieldRows.length) return;
+          const modalBody = modal.querySelector(".modal-body");
+          const firstSection = modalBody?.querySelector(".discourse-post-event-builder-form-row");
 
-          fieldRows.forEach((row) => {
-            const label = row.querySelector(".field-label");
-            const input = row.querySelector("input");
+          customFieldWrappers.forEach((wrapper) => {
+            const label = wrapper.querySelector(".label");
+            const input = wrapper.querySelector("input[type='text']");
             if (!label || !input) return;
 
             const labelText = label.textContent.trim().toLowerCase();
@@ -35,14 +42,14 @@ export default apiInitializer("1.8.0", (api) => {
             });
 
             if (rule) {
-              row.style.display = "block";
+              wrapper.style.display = "flex";
               
-              // logic to move the field to the top of the modal
+              // Move the field to the top of the modal body
               if (modalBody && firstSection) {
-                modalBody.insertBefore(row, firstSection);
+                modalBody.insertBefore(wrapper, firstSection);
               }
 
-              if (rule.is_dropdown && !row.querySelector(".custom-event-dropdown")) {
+              if (rule.is_dropdown && !wrapper.querySelector(".custom-event-dropdown")) {
                 const select = document.createElement("select");
                 select.classList.add("custom-event-dropdown");
                 const options = listToArr(rule.dropdown_options);
@@ -58,18 +65,21 @@ export default apiInitializer("1.8.0", (api) => {
 
                 select.addEventListener("change", (e) => {
                   input.value = e.target.value;
+                  // Critical: tell Discourse the value changed
                   input.dispatchEvent(new Event("input", { bubbles: true }));
+                  input.dispatchEvent(new Event("change", { bubbles: true }));
                 });
 
                 input.style.display = "none";
-                row.appendChild(select);
+                wrapper.appendChild(select);
               }
             } else {
-              row.style.display = "none";
+              // Hide any fields that don't have an explicit rule
+              wrapper.style.display = "none";
             }
           });
-        } catch (err) { console.error("[event customizer] error:", err); }
-      }, 300); // increased delay to ensure plugin finishes rendering
+        }
+      }, 100);
     }
   });
 });

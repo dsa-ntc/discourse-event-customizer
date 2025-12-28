@@ -62,19 +62,31 @@
 }
 
 .post-event-builder-modal {
-  // hides the "Custom Fields" header and its description
-  .custom-fields-header,
-  .custom-fields-description {
-    display: none;
+  // targets the "Custom Fields" title
+  .discourse-post-event-builder-form-row.custom-fields-header,
+  .discourse-post-event-builder-form-row.custom-fields-description {
+    display: none !important;
   }
 
-  // adds spacing to our moved dropdown so it looks native
-  .custom-field-row {
-    margin-bottom: 20px;
-    
+  // styles the new dropdown to match the "Recurrence" field
+  .discourse-post-event-builder-form-row.custom-field {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1.5em;
+
+    .label {
+      font-weight: bold;
+      margin-bottom: 0.5em;
+    }
+
     select.custom-event-dropdown {
       width: 100%;
-      margin-top: 5px;
+      height: 35px;
+      padding: 5px;
+      border: 1px solid var(--primary-low);
+      background-color: var(--secondary);
+      color: var(--primary);
+      border-radius: 4px;
     }
   }
 }
