@@ -4,14 +4,14 @@ export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
       
-      // pull settings directly from the service to fix referenceerror
-      const themeSettings = api.container.lookup("service:theme-settings");
-      const rules = themeSettings?.get("fields") || [];
+      // fix for referenceerror: pull settings from the container service
+      const themeSettingsService = api.container.lookup("service:theme-settings");
+      const rules = themeSettingsService?.get("fields") || [];
       
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // helper for parsing pipe-separated strings
+      // helper to parse pipe-separated strings
       const listToArr = (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val;
@@ -20,13 +20,13 @@ export default apiInitializer("1.8.0", (api) => {
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // target the flat div structure confirmed by your console check
+        // target the .event-field structure confirmed by your console
         const eventFields = modal?.querySelectorAll(".event-field");
         
         if (!eventFields?.length) return;
 
         eventFields.forEach((field) => {
-          // precise targeting based on your inspector data
+          // precise selector matching your inspector data
           const labelSpan = field.querySelector(".event-field-label .label") || field.querySelector(".label");
           const controlContainer = field.querySelector(".event-field-control");
           const input = field.querySelector("input[type='text']");
@@ -35,14 +35,14 @@ export default apiInitializer("1.8.0", (api) => {
 
           const labelText = labelSpan.textContent.trim().toLowerCase();
 
-          // hide the redundant custom field headers
+          // hide redundant header and description rows
           if (labelText.includes("custom fields") || labelText.includes("allowed custom fields")) {
             field.classList.add("event-field-to-hide");
             field.style.setProperty("display", "none", "important");
             return;
           }
 
-          // match modal label to theme rules
+          // match modal field to your theme rules
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
@@ -71,7 +71,7 @@ export default apiInitializer("1.8.0", (api) => {
 
               select.addEventListener("change", (e) => {
                 input.value = e.target.value;
-                // notify discourse that the input has changed
+                // notify discourse that the input has been updated
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
               });
@@ -80,20 +80,20 @@ export default apiInitializer("1.8.0", (api) => {
               controlContainer.appendChild(select);
             }
             
-            // move the custom field to the top of the modal body
+            // move the field to the top of the modal body
             const modalBody = modal.querySelector(".modal-body form");
             const firstField = modalBody?.querySelector(".event-field");
             if (modalBody && firstField && field !== firstField) {
               modalBody.insertBefore(field, firstField);
             }
           } else if (input && !rule) {
-            // hide any custom field that does not have a rule
+            // hide any custom field not defined in the theme rules
             field.style.display = "none";
           }
         });
       };
 
-      // observer to handle the plugin's dynamic rendering
+      // wait for the dynamic plugin modal to render
       const observer = new MutationObserver(() => {
         const modal = document.querySelector(".post-event-builder-modal");
         if (modal?.querySelectorAll(".event-field").length > 0) {
