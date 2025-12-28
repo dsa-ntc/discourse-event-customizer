@@ -1,20 +1,27 @@
+/* visual indicator for required fields */
 .custom-fields-section .field-wrapper[data-required="true"] .field-label::after {
   content: " *";
   color: var(--danger);
 }
 
+/* metadata styling to match discourse calendar event box */
 .event-metadata {
-  margin-top: -1px;
+  margin-top: -1px; /* overlap the bottom border of the event box */
   padding: 10px 15px;
   background-color: var(--primary-very-low);
   border: 1px solid var(--primary-low);
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 4px 4px; /* rounds only the bottom corners */
   font-size: var(--font-down-1);
   display: inline-block;
   min-width: 300px;
-  strong { color: var(--primary-high); margin-right: 5px; }
+
+  strong {
+    color: var(--primary-high);
+    margin-right: 5px;
+  }
 }
 
+/* style for the injected dropdowns */
 .custom-event-dropdown {
   width: 100%;
   background-color: var(--secondary);
@@ -22,13 +29,34 @@
   border: 1px solid var(--primary-low);
   padding: 6px;
   border-radius: 4px;
+  cursor: pointer;
+
+  &:focus {
+    outline: 1px solid var(--tertiary);
+  }
 }
 
+/* cleanup and layout for the event builder modal */
 .discourse-post-event-builder {
-  .modal-body { display: flex; flex-direction: column; }
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+  }
+
   .custom-fields-section {
-    order: -1; margin-bottom: 20px;
-    .section-title, .instructions { display: none; }
-    .field-label { font-weight: bold; display: block; margin-bottom: 5px; }
+    order: -1; /* moves custom fields above minimal/chat settings */
+    margin-bottom: 20px;
+
+    /* hide the redundant plugin headers and technical instructions */
+    .section-title, 
+    .instructions {
+      display: none;
+    }
+    
+    .field-label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
   }
 }

@@ -8,7 +8,7 @@ event_custom_field_rules:
       category_ids:
         type: list
         list_type: category
-        description: "Categories where this rule applies. Empty = All."
+        description: "Categories where this rule applies. Leave empty to apply globally."
       field_label_match:
         type: string
         required: true

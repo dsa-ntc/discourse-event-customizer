@@ -9,6 +9,10 @@ export default apiInitializer("1.8.0", (api) => {
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
+      // debugging: view the exact rule data in the browser console
+      console.log("[event customizer] loaded rules:", rules);
+      console.log("[event customizer] current category id:", currentCategoryId);
+
       setTimeout(() => {
         const fieldContainers = document.querySelectorAll(".custom-fields-section .field-wrapper");
         const createBtn = document.querySelector(".modal-footer .btn-primary");
@@ -70,7 +74,7 @@ export default apiInitializer("1.8.0", (api) => {
             if (rule.is_dropdown && !container.querySelector(".custom-event-dropdown")) {
               const select = document.createElement("select");
               select.classList.add("custom-event-dropdown");
-              const options = rule.dropdown_options ? rule.dropdown_options.split("|") : [];
+              const options = rule.dropdown_options ? rule.dropdown_options.split("|") : ["Select...", "Yes", "No"];
               
               options.forEach(opt => {
                 const el = document.createElement("option");
@@ -98,15 +102,24 @@ export default apiInitializer("1.8.0", (api) => {
 
                 // apply tags automatically based on the user's selection
                 if (rule.tag_mappings) {
+                  const validTags = Discourse.Site.currentProp("valid_tags") || [];
                   const mappings = rule.tag_mappings.split("|");
+                  
                   mappings.forEach(m => {
                     const parts = m.split("|");
                     if (parts.length === 2) {
                       const [optVal, tagName] = parts;
+                      const cleanTag = tagName.trim();
+                      
                       if (optVal.trim() === val) {
+                        // notify if the mapped tag is missing from the site
+                        if (!validTags.includes(cleanTag)) {
+                          bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist on this site. your automation may fail.`);
+                        }
+
                         const currentTags = composer.get("model.tags") || [];
-                        if (!currentTags.includes(tagName.trim())) {
-                          currentTags.push(tagName.trim());
+                        if (!currentTags.includes(cleanTag)) {
+                          currentTags.push(cleanTag);
                           composer.set("model.tags", currentTags);
                         }
                       }
@@ -132,7 +145,7 @@ export default apiInitializer("1.8.0", (api) => {
         });
 
         checkValidation();
-      }, 150);
+      }, 200);
     }
   });
 });
