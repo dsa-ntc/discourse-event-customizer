@@ -4,9 +4,8 @@ export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name !== "post-event-builder") return;
 
-    // direct access to the "fields" list to avoid typeerrors
-    const themeSettings = api.container.lookup("service:theme-settings");
-    const targetLabels = themeSettings?.fields || themeSettings?._fields || [];
+    // fix: use the global settings object directly
+    const targetLabels = settings.fields || [];
 
     const injectCheckboxes = () => {
       const modal = document.querySelector(".post-event-builder-modal");
@@ -17,7 +16,7 @@ export default apiInitializer("1.24.0", (api) => {
 
         const text = label.textContent.trim().toLowerCase();
         
-        // check if this label matches any string in your settings list
+        // match the label text against the global settings list
         const shouldTransform = targetLabels.some(t => text.includes(t.toLowerCase().trim()));
 
         if (shouldTransform) {
@@ -32,13 +31,13 @@ export default apiInitializer("1.24.0", (api) => {
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           
-          // sync: check if the hidden string input is specifically "yes"
+          // sync state: checked if current string value is "yes"
           checkbox.checked = nativeInput.value === "yes";
 
           checkbox.addEventListener("change", (e) => {
-            // sync checkbox state to "yes" or "no" strings for plugin compatibility
+            // map state to strings for plugin compatibility
             nativeInput.value = e.target.checked ? "yes" : "no";
-            // trigger plugin's save listener
+            // trigger plugin save
             nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
           });
 

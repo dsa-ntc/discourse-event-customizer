@@ -1,5 +1,5 @@
 .post-event-builder-modal {
-  /* hide the plugin's description text to keep the modal clean */
+  /* hide description and redundant headers from the plugin */
   .event-field-description,
   .event-field-label .label {
     display: none !important;
