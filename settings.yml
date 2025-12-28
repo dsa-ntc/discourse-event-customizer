@@ -1,3 +1,2 @@
 fields:
   type: list
-  default: "custom field name : checkbox"

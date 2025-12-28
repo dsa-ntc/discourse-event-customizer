@@ -4,23 +4,13 @@ export default apiInitializer("1.24.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name !== "post-event-builder") return;
 
-    // fix: bypass .get() typeerror by using direct property access
-    const settingsService = api.container.lookup("service:theme-settings");
-    const rawRules = settingsService?.fields || settingsService?._fields || [];
+    // fix: use direct property access to bypass the .get() TypeError
+    const themeSettings = api.container.lookup("service:theme-settings");
+    const checkboxTargetLabels = themeSettings?.fields || themeSettings?._fields || [];
 
-    // parse strings like "include cal : checkbox"
-    const rules = rawRules.map(ruleString => {
-      const parts = ruleString.split(":").map(s => s.trim());
-      return { 
-        label: parts[0]?.toLowerCase(), 
-        type: parts[1]?.toLowerCase(), 
-        options: parts[2] // only used for dropdowns
-      };
-    });
-
-    const injectField = () => {
+    const injectCheckbox = () => {
       const modal = document.querySelector(".post-event-builder-modal");
-      // target specific labels identified in the plugin hbs template
+      // target the specific label spans confirmed by the plugin source
       const labels = modal?.querySelectorAll(".custom-field-label");
 
       labels?.forEach((label) => {
@@ -31,68 +21,46 @@ export default apiInitializer("1.24.0", (api) => {
 
         if (!nativeInput || nativeInput.tagName !== "INPUT") return;
 
-        const rule = rules.find(r => labelText.includes(r.label));
+        // check if this label matches any string in your settings list
+        const shouldTransform = checkboxTargetLabels.some(matchStr => 
+          labelText.includes(matchStr.trim().toLowerCase())
+        );
 
-        if (rule) {
+        if (shouldTransform) {
           label.dataset.processed = "true";
+          
+          const checkboxContainer = document.createElement("label");
+          checkboxContainer.classList.add("custom-event-checkbox-wrap");
+
+          const checkbox = document.createElement("input");
+          checkbox.setAttribute("type", "checkbox");
+          checkbox.classList.add("custom-event-checkbox");
+
+          // checkbox is checked if the hidden input value is "yes"
+          checkbox.checked = nativeInput.value === "yes";
+
+          checkbox.addEventListener("change", (e) => {
+            // map checkbox state to boolean "yes"/"no" strings
+            nativeInput.value = e.target.checked ? "yes" : "no";
+            // trigger plugin save
+            nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+
           nativeInput.style.setProperty("display", "none", "important");
-
-          if (rule.type === "checkbox") {
-            const checkWrap = document.createElement("label");
-            checkWrap.classList.add("custom-event-checkbox-wrap");
-            
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            // checkboxes are boolean: "yes" if checked, "no" if not
-            checkbox.checked = nativeInput.value === "yes";
-            
-            checkbox.addEventListener("change", (e) => {
-              nativeInput.value = e.target.checked ? "yes" : "no";
-              // trigger hbs {{on "input"}} listener to save
-              nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
-            });
-            
-            label.after(checkWrap);
-            checkWrap.appendChild(checkbox);
-          } 
-          else if (rule.type === "dropdown") {
-            const select = document.createElement("select");
-            select.classList.add("custom-event-dropdown");
-            
-            // default dropdown options if none provided in string
-            const opts = (rule.options || "Yes|yes, No|no").split(/[|,]+/).map(o => {
-              const [n, v] = o.includes("|") ? o.split("|") : [o, o];
-              return { name: n.trim(), value: v.trim() };
-            });
-
-            opts.forEach(o => {
-              const opt = document.createElement("option");
-              opt.textContent = o.name;
-              opt.value = o.value;
-              if (nativeInput.value === o.value) opt.selected = true;
-              select.appendChild(opt);
-            });
-
-            select.addEventListener("change", (e) => {
-              nativeInput.value = e.target.value;
-              nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
-            });
-
-            label.after(select);
-          }
+          label.after(checkboxContainer);
+          checkboxContainer.appendChild(checkbox);
         }
       });
     };
 
-    // monitor for the appearance of custom field labels
     const observer = new MutationObserver(() => {
       if (document.querySelector(".custom-field-label")) {
-        injectField();
+        injectCheckbox();
         observer.disconnect();
       }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(injectField, 600);
+    setTimeout(injectCheckbox, 600);
   });
 });

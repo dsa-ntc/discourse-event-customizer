@@ -1,4 +1,4 @@
 en:
   theme_metadata:
     settings:
-      fields: "Format as: `custom field name : checkbox`. The custom field name must exactly match the entry in the `Discourse post event allowed custom fields` site setting."
+      fields: "The custom field name must exactly match the entry in the `Discourse post event allowed custom fields` site setting."
