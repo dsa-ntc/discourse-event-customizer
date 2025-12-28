@@ -1,0 +1,34 @@
+.custom-fields-section .field-wrapper[data-required="true"] .field-label::after {
+  content: " *";
+  color: var(--danger);
+}
+
+.event-metadata {
+  margin-top: -1px;
+  padding: 10px 15px;
+  background-color: var(--primary-very-low);
+  border: 1px solid var(--primary-low);
+  border-radius: 0 0 4px 4px;
+  font-size: var(--font-down-1);
+  display: inline-block;
+  min-width: 300px;
+  strong { color: var(--primary-high); margin-right: 5px; }
+}
+
+.custom-event-dropdown {
+  width: 100%;
+  background-color: var(--secondary);
+  color: var(--primary);
+  border: 1px solid var(--primary-low);
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.discourse-post-event-builder {
+  .modal-body { display: flex; flex-direction: column; }
+  .custom-fields-section {
+    order: -1; margin-bottom: 20px;
+    .section-title, .instructions { display: none; }
+    .field-label { font-weight: bold; display: block; margin-bottom: 5px; }
+  }
+}
