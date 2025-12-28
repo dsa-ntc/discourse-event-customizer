@@ -13,25 +13,22 @@ export default apiInitializer("1.8.0", (api) => {
         return typeof val === 'string' ? val.split(/[|,]+/).map(s => s.trim()).filter(Boolean) : [];
       };
 
-      // We use a recurring check to ensure the plugin has finished building the modal
+      // Poll specifically for the unique class the plugin uses for its form rows
       let attempts = 0;
-      const transformInterval = setInterval(() => {
-        attempts++;
+      const interval = setInterval(() => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // Looking specifically for the custom field container used by the plugin
-        const customFieldWrappers = modal?.querySelectorAll(".discourse-post-event-builder-form-row.custom-field");
+        const customRows = modal?.querySelectorAll(".discourse-post-event-builder-form-row.custom-field");
         
-        if (customFieldWrappers?.length || attempts > 20) {
-          clearInterval(transformInterval);
-          
-          if (!customFieldWrappers?.length) return;
+        if (customRows?.length || attempts > 30) {
+          clearInterval(interval);
+          if (!customRows?.length) return;
 
           const modalBody = modal.querySelector(".modal-body");
-          const firstSection = modalBody?.querySelector(".discourse-post-event-builder-form-row");
+          const topTarget = modalBody?.querySelector(".discourse-post-event-builder-form-row");
 
-          customFieldWrappers.forEach((wrapper) => {
-            const label = wrapper.querySelector(".label");
-            const input = wrapper.querySelector("input[type='text']");
+          customRows.forEach((row) => {
+            const label = row.querySelector(".label");
+            const input = row.querySelector("input[type='text']");
             if (!label || !input) return;
 
             const labelText = label.textContent.trim().toLowerCase();
@@ -42,14 +39,14 @@ export default apiInitializer("1.8.0", (api) => {
             });
 
             if (rule) {
-              wrapper.style.display = "flex";
+              row.classList.add("transformed-custom-field");
               
-              // Move the field to the top of the modal body
-              if (modalBody && firstSection) {
-                modalBody.insertBefore(wrapper, firstSection);
+              // Move field to the very top
+              if (modalBody && topTarget) {
+                modalBody.insertBefore(row, topTarget);
               }
 
-              if (rule.is_dropdown && !wrapper.querySelector(".custom-event-dropdown")) {
+              if (rule.is_dropdown && !row.querySelector(".custom-event-dropdown")) {
                 const select = document.createElement("select");
                 select.classList.add("custom-event-dropdown");
                 const options = listToArr(rule.dropdown_options);
@@ -65,21 +62,20 @@ export default apiInitializer("1.8.0", (api) => {
 
                 select.addEventListener("change", (e) => {
                   input.value = e.target.value;
-                  // Critical: tell Discourse the value changed
                   input.dispatchEvent(new Event("input", { bubbles: true }));
                   input.dispatchEvent(new Event("change", { bubbles: true }));
                 });
 
                 input.style.display = "none";
-                wrapper.appendChild(select);
+                row.querySelector(".value").appendChild(select);
               }
             } else {
-              // Hide any fields that don't have an explicit rule
-              wrapper.style.display = "none";
+              row.style.display = "none";
             }
           });
         }
-      }, 100);
+        attempts++;
+      }, 150);
     }
   });
 });
