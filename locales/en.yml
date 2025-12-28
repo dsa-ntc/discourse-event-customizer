@@ -5,9 +5,9 @@ en:
         description: |
           Manage how custom fields are transformed into dropdowns or mapped to tags.
           <br><br>
-          <b>IMPORTANT:</b> Every field defined below <u>must</u> also be added to the 
+          <b>IMPORTANT:</b> Every field defined in the object settings editor <u>must</u> also be added to the 
           <a href="/admin/site_settings/category/all?filter=discourse_post_event_allowed_custom_fields">Allowed Custom Fields</a> 
-          site setting for the Calendar plugin to work.
+          site setting for the Calendar plugin to work. <b>In the Allowed Custom Fields setting, enter the custom field label <u>exactly</u> as it appears.</b>
         schema:
           properties:
             field_label_match:
