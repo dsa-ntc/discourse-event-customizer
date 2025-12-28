@@ -1,14 +1,33 @@
 .post-event-builder-modal {
-  /* remove all hiding logic to see if elements are rendering */
-  
-  .custom-field-label {
-    color: green !important; /* highlight the target labels in green */
-    font-weight: bold !important;
+  /* hide description and redundant headers */
+  .event-field-description,
+  .event-field-label .label {
+    display: none !important;
   }
 
-  input[type="checkbox"] {
+  /* style the green label from your screenshot */
+  .custom-field-label {
+    display: inline-block !important;
+    font-weight: bold !important;
+    margin-bottom: 10px !important;
+    vertical-align: middle !important;
+  }
+
+  /* style the injected checkbox */
+  input.injected-event-checkbox {
     display: inline-block !important;
     visibility: visible !important;
     opacity: 1 !important;
+    width: 22px !important;
+    height: 22px !important;
+    margin-left: 15px !important;
+    cursor: pointer !important;
+    vertical-align: middle !important;
+    accent-color: var(--tertiary) !important;
+  }
+
+  /* ensure the "optional" text box stays hidden */
+  input.custom-field-input {
+    display: none !important;
   }
 }
