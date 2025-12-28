@@ -4,9 +4,9 @@ export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
       
-      // pull rules directly from the internal service
-      const rulesService = api.container.lookup("service:theme-settings");
-      const rules = rulesService?.get("fields") || [];
+      // logic fix: pull rules directly from the internal container to avoid referenceerror
+      const themeSettingsService = api.container.lookup("service:theme-settings");
+      const rules = themeSettingsService?.get("fields") || [];
       
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
@@ -19,13 +19,13 @@ export default apiInitializer("1.8.0", (api) => {
 
       const transformFields = () => {
         const modal = document.querySelector(".post-event-builder-modal");
-        // target the flat event-field structure
+        // target the flat event-field structure confirmed in your inspector
         const eventFields = modal?.querySelectorAll(".event-field");
         
         if (!eventFields?.length) return;
 
         eventFields.forEach((field) => {
-          // precise targeting using the hierarchy
+          // find label spans and control containers precisely
           const labelSpan = field.querySelector(".event-field-label .label") || field.querySelector(".label");
           const controlContainer = field.querySelector(".event-field-control");
           const input = field.querySelector("input[type='text']");
@@ -34,14 +34,14 @@ export default apiInitializer("1.8.0", (api) => {
 
           const labelText = labelSpan.textContent.trim().toLowerCase();
 
-          // hide the redundant header and description rows
+          // hide redundant header and description rows
           if (labelText.includes("custom fields") || labelText.includes("allowed custom fields")) {
             field.classList.add("event-field-to-hide");
             field.style.setProperty("display", "none", "important");
             return;
           }
 
-          // match modal field to rules defined in theme settings
+          // match modal field to theme rules
           const rule = rules.find(r => {
             const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
             const labelMatch = r.field_label_match && labelText.includes(r.field_label_match.toLowerCase());
@@ -70,7 +70,6 @@ export default apiInitializer("1.8.0", (api) => {
 
               select.addEventListener("change", (e) => {
                 input.value = e.target.value;
-                // force discourse to recognize the change
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
               });
@@ -79,14 +78,14 @@ export default apiInitializer("1.8.0", (api) => {
               controlContainer.appendChild(select);
             }
             
-            // move the field to the top of the modal body
+            // move the custom field to the top of the modal body
             const modalBody = modal.querySelector(".modal-body form") || modal.querySelector("form");
             const firstField = modalBody?.querySelector(".event-field");
             if (modalBody && firstField && field !== firstField) {
               modalBody.insertBefore(field, firstField);
             }
           } else if (input && !rule) {
-            // hide any field not explicitly handled by a rule
+            // hide any field that does not have a matching rule
             field.style.display = "none";
           }
         });
