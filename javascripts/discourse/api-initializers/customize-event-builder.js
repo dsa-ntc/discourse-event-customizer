@@ -4,56 +4,21 @@ import I18n from "I18n";
 export default apiInitializer("1.8.0", (api) => {
   api.onAppEvent("modal:show", (data) => {
     if (data?.name === "post-event-builder") {
-      // safely retrieve rules from settings
-      const rules = settings?.event_custom_field_rules || [];
+      const rules = settings?.fields || [];
       const composer = api.container.lookup("controller:composer");
       const currentCategoryId = composer?.get("model.category.id");
 
-      // helper to safely turn settings strings or arrays into usable arrays
+      // helper for fields that are still strings (like options or mappings)
       const listToArr = (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val;
-        return typeof val === 'string' ? val.split("|").filter(Boolean) : [];
+        return typeof val === 'string' ? val.split(/[|,]+/).map(s => s.trim()).filter(Boolean) : [];
       };
 
       setTimeout(() => {
         try {
           const fieldContainers = document.querySelectorAll(".custom-fields-section .field-wrapper");
-          const createBtn = document.querySelector(".modal-footer .btn-primary");
-          const cancelBtn = document.querySelector(".modal-footer .cancel, .modal-footer .btn-danger");
-          const closeX = document.querySelector(".modal-header .close");
-
           if (!fieldContainers.length) return;
-
-          const checkValidation = () => {
-            let allValid = true;
-            fieldContainers.forEach(container => {
-              const dropdown = container.querySelector(".custom-event-dropdown");
-              if (container.dataset.required === "true" && dropdown && (dropdown.value === "" || dropdown.value === "Select...")) {
-                allValid = false;
-              }
-            });
-            if (createBtn) createBtn.disabled = !allValid;
-          };
-
-          const handleCancel = (e) => {
-            let hasData = false;
-            fieldContainers.forEach(container => {
-              const dropdown = container.querySelector(".custom-event-dropdown");
-              if (dropdown && dropdown.value !== "" && dropdown.value !== "Select...") hasData = true;
-            });
-
-            if (hasData && window.bootbox) {
-              e.preventDefault();
-              e.stopPropagation();
-              window.bootbox.confirm(
-                "You have unsaved selections. Are you sure you want to close without saving?",
-                (result) => { if (result) api.container.lookup("service:modal").hide(); }
-              );
-            }
-          };
-
-          [cancelBtn, closeX].forEach(el => el?.addEventListener("click", handleCancel, true));
 
           fieldContainers.forEach((container) => {
             const label = container.querySelector(".field-label");
@@ -61,18 +26,14 @@ export default apiInitializer("1.8.0", (api) => {
             if (!label || !input) return;
 
             const labelText = label.textContent.trim() || "";
-
-            // match current field to rules defined in settings
             const rule = rules.find(r => {
-              const categoryList = listToArr(r.target_categories).map(id => parseInt(id));
-              const categoryMatch = categoryList.length === 0 || categoryList.includes(currentCategoryId);
+              // target_categories is now a native array
+              const categoryMatch = !r.target_categories?.length || r.target_categories.includes(currentCategoryId);
               return categoryMatch && r.field_label_match && labelText.includes(r.field_label_match);
             });
 
             if (rule) {
               container.style.display = "block";
-              if (rule.is_required) container.dataset.required = "true";
-
               if (rule.is_dropdown && !container.querySelector(".custom-event-dropdown")) {
                 const select = document.createElement("select");
                 select.classList.add("custom-event-dropdown");
@@ -91,58 +52,15 @@ export default apiInitializer("1.8.0", (api) => {
                 select.addEventListener("change", (e) => {
                   input.value = e.target.value;
                   input.dispatchEvent(new Event("input", { bubbles: true }));
-                  checkValidation();
                 });
-
                 input.style.display = "none";
                 container.appendChild(select);
-              }
-
-              if (createBtn) {
-                createBtn.addEventListener("click", () => {
-                  const val = input.value;
-                  if (!val || val === "Select...") return;
-
-                  if (rule.tag_mappings) {
-                    const validTags = Discourse.Site.currentProp("valid_tags") || [];
-                    const mappings = listToArr(rule.tag_mappings);
-                    mappings.forEach(m => {
-                      const parts = m.split("|");
-                      if (parts.length === 2) {
-                        const [optVal, tagName] = parts;
-                        const cleanTag = tagName.trim();
-                        if (optVal.trim() === val) {
-                          if (!validTags.includes(cleanTag) && window.bootbox) {
-                            window.bootbox.alert(`<b>warning:</b> the tag <code>${cleanTag}</code> does not exist.`);
-                          }
-                          const currentTags = composer.get("model.tags") || [];
-                          if (!currentTags.includes(cleanTag)) {
-                            currentTags.push(cleanTag);
-                            composer.set("model.tags", currentTags);
-                          }
-                        }
-                      }
-                    });
-                  }
-
-                  if (rule.auto_include_in_post) {
-                    const content = `**${rule.field_label_match}:** ${val}`;
-                    const injection = `\n\n<div class="event-metadata">\n${content}\n</div>`;
-                    const currentReply = composer.get("model.reply") || "";
-                    if (!currentReply.includes(content)) {
-                      composer.set("model.reply", currentReply + injection);
-                    }
-                  }
-                }, { once: true });
               }
             } else {
               container.style.display = "none";
             }
           });
-          checkValidation();
-        } catch (err) {
-          console.error("[event customizer] error:", err);
-        }
+        } catch (err) { console.error("[event customizer] error:", err); }
       }, 200);
     }
   });

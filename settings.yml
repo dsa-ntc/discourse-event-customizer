@@ -12,18 +12,14 @@ fields:
           min: 1
           max: 50
       target_categories:
-        type: list
-        list_type: category
+        type: categories
       is_dropdown:
         type: boolean
         default: true
       dropdown_options:
-        type: list
+        type: string
         list_type: simple
-        default: 
-          - "Select..."
-          - "Yes"
-          - "No"
+        default: "Select...|Yes|No"
       auto_include_in_post:
         type: boolean
         default: false
@@ -31,5 +27,4 @@ fields:
         type: boolean
         default: false
       tag_mappings:
-        type: list
-        list_type: simple
+        type: string

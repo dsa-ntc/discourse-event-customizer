@@ -15,12 +15,14 @@ en:
               label: Convert to dropdown
             dropdown_options:
               label: Dropdown options
+              description: Separate options with pipes (e.g., Yes|No|Maybe).
             auto_include_in_post:
-              label: Auto-include in post text
+              label: Include the field in the event's text
             is_required:
               label: Make the field required
             tag_mappings:
               label: Tag mappings (Value|Tag)
               description: |
                 If tags should be added and mapped based on the dropdown fields, manually enter mappings as Value|Tag.
-                Note: tags must currently exist and be typed exactly as they appear.
+                Tags must currently exist and be typed exactly as they appear.
+                Separate multiple mappings with commas.
