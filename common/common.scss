@@ -6,7 +6,7 @@
 
 /* modern plugin structure cleanup and layout */
 .post-event-builder-modal {
-  /* hide the header and description divs using the class identified in js */
+  /* hide the header and description divs identified in your inspector */
   .event-field-to-hide {
     display: none !important;
   }
@@ -24,7 +24,7 @@
       }
     }
 
-    /* ensure the dropdown matches native discourse styling */
+    /* ensure the dropdown matches native discourse dimensions */
     select.custom-event-dropdown {
       width: 100%;
       height: 35px;
