@@ -1,5 +1,6 @@
 /* visual indicator for required fields */
-.custom-fields-section .field-wrapper[data-required="true"] .field-label::after {
+.custom-fields-section .field-wrapper[data-required="true"] .field-label::after,
+.discourse-post-event-builder-form-row.custom-field[data-required="true"] .label::after {
   content: " *";
   color: var(--danger);
 }
@@ -37,6 +38,7 @@
 }
 
 /* cleanup and layout for the event builder modal */
+/* note: targets the legacy plugin structure if still present */
 .discourse-post-event-builder {
   .modal-body {
     display: flex;
@@ -61,14 +63,16 @@
   }
 }
 
+/* modern plugin structure cleanup and layout */
+/* targets the flat form-row structure seen in recent screenshots */
 .post-event-builder-modal {
-  // override plugin-level inline styles
+  /* hide the redundant plugin headers and technical instructions */
   .discourse-post-event-builder-form-row.custom-fields-header,
   .discourse-post-event-builder-form-row.custom-fields-description {
     display: none !important;
   }
 
-  // styles to ensure the dropdown looks like the native 'Recurrence' menu
+  /* style for the individual custom field rows transformed by javascript */
   .discourse-post-event-builder-form-row.custom-field.transformed-custom-field {
     margin-bottom: 1.5em;
     display: flex;
@@ -79,6 +83,7 @@
       margin-bottom: 0.5em;
     }
 
+    /* ensure the dropdown matches the native 'Recurrence' menu dimensions */
     select.custom-event-dropdown {
       width: 100%;
       height: 35px;
@@ -87,6 +92,11 @@
       border-radius: 4px;
       background-color: var(--secondary);
       color: var(--primary);
+    }
+    
+    /* hide the native text input once dropdown is injected */
+    input[type="text"] {
+      display: none;
     }
   }
 }
