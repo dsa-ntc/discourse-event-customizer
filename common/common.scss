@@ -1,33 +1,29 @@
 .post-event-builder-modal {
-  /* hide description and redundant headers */
+  /* hide the original custom field header and 'optional' text */
+  .event-field-label .label,
   .event-field-description,
-  .event-field-label .label {
+  .custom-field-input {
     display: none !important;
   }
 
-  /* style the green label from your screenshot */
-  .custom-field-label {
-    display: inline-block !important;
-    font-weight: bold !important;
-    margin-bottom: 10px !important;
-    vertical-align: middle !important;
-  }
+  /* ensure our injected row matches the native layout */
+  .checkbox-label.injected-custom-field {
+    display: flex !important;
+    align-items: center !important;
+    margin-top: 10px !important;
+    cursor: pointer;
 
-  /* style the injected checkbox */
-  input.injected-event-checkbox {
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: 22px !important;
-    height: 22px !important;
-    margin-left: 15px !important;
-    cursor: pointer !important;
-    vertical-align: middle !important;
-    accent-color: var(--tertiary) !important;
-  }
+    input[type="checkbox"] {
+      margin-right: 10px !important;
+      width: 18px !important;
+      height: 18px !important;
+      flex-shrink: 0;
+    }
 
-  /* ensure the "optional" text box stays hidden */
-  input.custom-field-input {
-    display: none !important;
+    .message {
+      font-weight: bold !important;
+      color: var(--primary) !important;
+      line-height: var(--line-height-medium);
+    }
   }
 }
