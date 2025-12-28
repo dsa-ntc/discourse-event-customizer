@@ -60,3 +60,21 @@
     }
   }
 }
+
+.post-event-builder-modal {
+  // hides the "Custom Fields" header and its description
+  .custom-fields-header,
+  .custom-fields-description {
+    display: none;
+  }
+
+  // adds spacing to our moved dropdown so it looks native
+  .custom-field-row {
+    margin-bottom: 20px;
+    
+    select.custom-event-dropdown {
+      width: 100%;
+      margin-top: 5px;
+    }
+  }
+}
